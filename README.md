@@ -1,84 +1,241 @@
-# Snowball
+# 🧊 Snowball – Autonomous AI Companion System
 
-Snowball is a continuously learning AI entity designed to play various games, interact with users through voice and text, and evolve based on experiences. The project aims to create an intelligent assistant capable of adapting and improving over time while integrating into different platforms, including PCs, mobile devices, and robots.
+## Overview
 
-## Features
+**Snowball** is a modular, evolving AI system designed to function as a persistent digital companion.
 
-- **Game Interaction**: Snowball can play multiple games like Snake, RISK, Pac-Man, Asteroids, and more.
-- **User Interaction**: Engage with Snowball through voice and text commands.
-- **Learning Capabilities**: Snowball learns from interactions and tasks, adapting its strategies and responses.
-- **Memory Storage**: Snowball can store memories and recall information based on past interactions.
-- **Platform Integration**: Planned integrations with various platforms for a seamless user experience.
+It combines:
+- 🧠 Local and remote AI models
+- 🗣️ Voice + text interaction
+- 🧩 Modular architecture (memory, decision-making, perception)
+- 🌐 Multi-platform integration (desktop, mobile, robotics, games)
 
-## Getting Started
+Snowball is not a single application.  
+It is a **framework for building an adaptive, continuously learning AI presence**.
 
-### Prerequisites
+---
 
-Make sure you have the following installed:
+## 🧭 Vision
 
-- Python 3.x
-- Necessary libraries (see [Requirements](#requirements) below)
+Snowball is built around one core idea:
 
-### Installation
+> AI should not be a tool you open…  
+> it should be a presence that grows with you.
 
-1. Clone the repository:
+The long-term goal is to create:
+- A **persistent AI companion**
+- Capable of **memory, context, and personality evolution**
+- That exists across devices and environments
+- And eventually interacts with the physical world (robotics / IoT)
 
-   ```bash
-   git clone https://github.com/Fll0yd/Snowball.git
-   cd Snowball
+---
 
-2. Install the required dependencies:
+## 🧠 Core Architecture
 
-   ```bash
-   pip install -r requirements.txt
+Snowball is structured as a modular system where each component has a defined responsibility.
 
-### Usage
-   1. To run Snowball, execute the main script:
+### Core AI Modules (`core/ai/`)
+- **agent.py** → Main orchestration layer
+- **decision_maker.py** → Determines intent & routing
+- **memory.py** → Stores and retrieves contextual data
+- **sentiment_analysis.py** → Emotional context processing
+- **reinforcement.py** → Behavior adaptation (future)
+- **vision.py** → Computer vision (planned)
+- **speech.py / voice.py** → Audio interaction
+- **training.py** → Model tuning / learning pipeline
 
-      ```bash
-      python main_menu.py
+---
 
-   2. Follow the on-screen instructions to interact with Snowball.
+### System Layer (`core/system/`)
+- **config_loader.py** → Centralized config management
+- **file_manager.py** → File operations & persistence
+- **logger.py** → System logging
+- **system_monitor.py** → Health + performance tracking
+- **update_schema.py** → Data structure evolution
 
+---
+
+### Interface Layer (`interface/`)
+- Desktop UI components
+- Configuration panels
+- Main menu system (`main_menu.py`)
+- Developer + settings interfaces
+
+---
+
+### Integration Layer (`core/integration/`)
+- Cloud sync
+- Device sync
+- Mobile communication
+
+---
+
+### Storage Layer (`storage/`)
+- Logs
+- Audio
+- Structured data
+- Model artifacts
+
+---
+
+### Additional Modules
+- 🎮 `games/` → Interactive environments (Snake, Risk, etc.)
+- 🤖 `inmoov/` → Robotics integration
+- 📱 `mobile_integration/` → Cross-device interaction
+- ⛏️ `minecraft_integration/` → Experimental AI gameplay
+
+---
+
+## ✨ Current Capabilities
+
+- Text-based interaction via local or API models
+- Basic conversational memory
+- Modular AI routing (decision-based model selection)
+- Voice input/output (in development)
+- Multi-module architecture ready for expansion
+
+---
+
+## ⚙️ Getting Started
 
 ### Requirements
 
-The project depends on several libraries. The following requirements.txt file lists all the necessary libraries:
+- Python 3.10+
+- Ollama (for local LLM support) *(optional but recommended)*
 
-      Required libraries for Snowball project
-      
-      numpy==1.23.5             # For numerical operations
-      tensorflow==2.12.0        # For machine learning and deep learning
-      speechrecognition==3.8.1  # For speech recognition
-      pyttsx3==2.9              # For text-to-speech conversion
-      pygame==2.1.3             # For game development and handling graphics
-      flask==2.3.2              # For creating a web interface (optional)
-      requests==2.28.1          # For making HTTP requests (optional)
+### Install
 
-### Contributing
+```bash
+git clone https://github.com/Fll0yd/Snowball.git
+cd Snowball
+pip install -r requirements.txt
+Run
+python interface/main_menu.py
+```
 
-We welcome contributions! To contribute to Snowball, please follow these steps:
+🔥 Key Design Concepts
+1. Modular Intelligence
 
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Commit your changes and push to your branch.
-4. Open a pull request detailing your changes.
+Each AI function is separated into its own module, allowing:
 
+Independent upgrades
+Easy experimentation
+Scalable architecture
+2. Model Routing
 
-### Issues
+Snowball can route requests between:
 
-If you encounter any issues or have suggestions for improvements, please open an issue in the Issues section.
+Fast lightweight models
+Planning models
+Deep reasoning models
 
+This enables:
 
-### License
+Performance optimization
+Cost efficiency
+Smarter responses
+3. Persistent Memory
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+Snowball is designed to:
 
+Store interactions
+Recall past context
+Build long-term understanding
+4. Multi-Environment Presence
 
-### Contact
+Snowball is being built to exist across:
 
-For questions or inquiries, feel free to reach out to the project maintainer:
+Desktop
+Mobile
+Games
+Robotics platforms
+⚠️ Current Limitations
+No unified orchestration layer (modules loosely connected)
+Memory system is basic (not fully contextual or structured)
+No centralized API interface
+UI is functional but not polished
+No containerization or deployment pipeline
+Some modules are placeholders or experimental
+🚧 High-Impact Improvements (Next Steps)
+🧠 Core System
+Build a central orchestrator service
+Standardize module interfaces (input/output contracts)
+Introduce async processing (event-driven architecture)
+🧩 Memory System
+Move to structured memory (vector DB or embeddings)
+Add:
+short-term memory
+long-term memory
+episodic memory
+🔌 API Layer
+Create a unified API:
+/chat
+/memory
+/tasks
+Enable external integrations
+🗣️ Voice System
+Replace blocking voice loop with async streaming
+Add wake-word detection
+Improve latency + responsiveness
+🖥️ UI / UX
+Replace current UI with:
+modern desktop UI (PySide / Electron)
+or web-based dashboard (React + FastAPI)
+☁️ Deployment
+Dockerize system
+Add CI/CD pipeline
+Enable cloud + local hybrid mode
+🤖 Robotics Integration
+Connect with InMoov system
+Sensor input → AI processing → physical response
+🧊 Snowball Ecosystem (Future)
 
-Name: Kenneth Boller
+Snowball is designed to support modular extensions:
 
-Email: KenLloydB@gmail.com
+🧠 Core AI Engine
+🗣️ Voice Interaction Layer
+🧒 Stutter Assistance Module (speech coaching)
+🏠 Smart Home Integration
+🎮 Game AI Integration
+🤖 Robotics Control Layer
+🧊 Why This Project Matters
+
+Snowball demonstrates:
+
+Systems thinking over isolated scripts
+Modular architecture design
+AI orchestration concepts
+Real-world integration planning
+Long-term product vision
+
+This is not just a project.
+
+It is the foundation of a personal AI platform.
+
+👤 Author
+
+Kenneth Lloyd Boller
+AI Systems Builder | Automation Engineer | Creator of Snowball
+
+📝 Note to Future Me
+
+This is the one.
+
+Not the cleanest.
+Not the most finished.
+But the most important.
+
+When you come back to this:
+
+Don’t rewrite everything
+Don’t chase perfection
+
+Just:
+
+Connect the pieces
+Make one clean execution path
+Ship something usable
+
+Snowball doesn’t need to be perfect.
+
+It just needs to start feeling alive.
