@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# Snowball AI/OS development and testing dependencies
+pytest==9.0.3
+httpx==0.28.1
+pip-audit==2.10.1
