@@ -61,3 +61,40 @@ def test_memory_retrieval_prefers_user_fact_over_bad_old_answers(tmp_path, monke
     assert result is not None
     assert result.get("user_input") == "My Neptune 4 printer is named Kraken."
     assert "Neptune 4" in result.get("user_input", "")
+
+
+def test_memory_persists_fact_across_reinitialization(tmp_path, monkeypatch):
+    """
+    Regression test for Snowball's core persistence promise:
+
+    Learn a fact -> write it to disk -> create a fresh Memory instance ->
+    retrieve the fact without manually reseeding it.
+    """
+    monkeypatch.setenv("SNOWBALL_DISABLE_LOCAL_MEMORY", "0")
+    monkeypatch.setenv("SNOWBALL_LOCAL_MEMORY_DIR", str(tmp_path))
+
+    from core.ai.memory import Memory
+
+    # First Snowball lifetime: learn something new.
+    first_memory = Memory(logger=None)
+    first_memory.store_interaction(
+        user_input="My test rover is named Cobalt.",
+        ai_response="Got it. Cobalt is your test rover.",
+        query_type="General",
+    )
+
+    # Confirm persistence actually reached disk.
+    memory_file = tmp_path / "local_memory.jsonl"
+    assert memory_file.exists()
+    assert "Cobalt" in memory_file.read_text(encoding="utf-8")
+
+    # Simulate a fresh Snowball lifetime.
+    del first_memory
+    second_memory = Memory(logger=None)
+
+    # The new instance must recover the fact from persisted memory.
+    result = second_memory.get_memory("What is Cobalt?")
+
+    assert result is not None
+    assert result.get("user_input") == "My test rover is named Cobalt."
+    assert "Cobalt" in result.get("user_input", "")
