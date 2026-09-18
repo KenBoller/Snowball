@@ -5,7 +5,7 @@
 # should use separate dependency groups when they are added back.
 
 cachetools==5.5.1
-requests==2.32.3
+requests==2.34.2
 fastapi==0.136.3
 pydantic==2.10.6
 uvicorn==0.34.0
