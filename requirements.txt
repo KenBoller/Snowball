@@ -1,9 +1,11 @@
-# Required libraries for Snowball project
+# Snowball AI/OS core runtime dependencies
+#
+# Keep this file intentionally small.
+# Optional systems such as embeddings, Cosmos, voice, games, and robotics
+# should use separate dependency groups when they are added back.
 
-numpy==1.23.5             # For numerical operations
-tensorflow==2.12.0        # For machine learning and deep learning
-speechrecognition==3.8.1  # For speech recognition
-pyttsx3==2.9              # For text-to-speech conversion
-pygame==2.1.3             # For game development and handling graphics
-flask==2.3.2              # For creating a web interface (optional)
-requests==2.28.1          # For making HTTP requests (optional)
+cachetools==5.5.1
+requests==2.32.3
+fastapi==0.136.3
+pydantic==2.10.6
+uvicorn==0.34.0
