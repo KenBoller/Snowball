@@ -4,8 +4,6 @@ import json
 import logging
 import os
 from typing import Optional, Dict, Any
-from Snowball.decom.OLDlogger import SnowballLogger
-
 
 class ConfigLoader:
     _cache = {}

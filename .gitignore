@@ -1,10 +1,58 @@
+# ==========================================
+# Snowball AI/OS
+# Python / local runtime files
+# ==========================================
 
+# Python generated files
+__pycache__/
+*.py[cod]
+*$py.class
 
-__init__.py
-docs/
-tests/
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Snowball runtime data
+storage/logs/
+storage/memory/
+
+# Generated logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Generated audio / test artifacts
 response.mp3
 test_checkpoint.npz
 test_q_table.npy
-Future Integrations/
-decom/
+
+# Large local model files
+*.pt
+*.pth
+*.onnx
+*.bin
+*.safetensors
