@@ -1,241 +1,472 @@
-# 🧊 Snowball – Autonomous AI Companion System
+# ☃️ Snowball AI/OS
 
-## Overview
+**Snowball AI/OS** is a modular personal AI system built around persistent memory, local AI models, and a stable API that can eventually connect one Snowball identity across desktop, mobile, automation systems, games, and robotics.
 
-**Snowball** is a modular, evolving AI system designed to function as a persistent digital companion.
+Rather than building Snowball as one enormous AI script, the project is evolving into a small **AI operating layer**.
 
-It combines:
-- 🧠 Local and remote AI models
-- 🗣️ Voice + text interaction
-- 🧩 Modular architecture (memory, decision-making, perception)
-- 🌐 Multi-platform integration (desktop, mobile, robotics, games)
+The core idea is simple:
 
-Snowball is not a single application.  
-It is a **framework for building an adaptive, continuously learning AI presence**.
+> One Snowball. Many models, tools, devices, and interfaces.
+
+The language model is not Snowball itself. Models are replaceable reasoning engines. Snowball is the surrounding system: memory, context, identity, routing, permissions, projects, history, tools, and eventually automation.
 
 ---
 
-## 🧭 Vision
+## 🚧 Project Status
 
-Snowball is built around one core idea:
+Snowball is under active development.
 
-> AI should not be a tool you open…  
-> it should be a presence that grows with you.
+The current focus is deliberately narrow: establish a small, reliable core before reconnecting the larger systems developed during earlier versions of the project.
 
-The long-term goal is to create:
-- A **persistent AI companion**
-- Capable of **memory, context, and personality evolution**
-- That exists across devices and environments
-- And eventually interacts with the physical world (robotics / IoT)
+### Working now
 
----
+- Python-based Snowball AI core
+- Local Ollama model integration
+- Persistent local memory
+- Memory retrieval across process restarts
+- Decision and request routing
+- Internal Python chat API
+- FastAPI HTTP interface
+- Health and capability endpoints
+- Automated regression and API contract tests
 
-## 🧠 Core Architecture
+### Planned
 
-Snowball is structured as a modular system where each component has a defined responsibility.
+- n8n automation and event orchestration
+- Mobile access
+- Voice interaction
+- Structured and semantic memory
+- File and application integrations
+- System monitoring
+- Game environments
+- Vision
+- Cloud synchronization
+- Robotics / InMoov integration
 
-### Core AI Modules (`core/ai/`)
-- **agent.py** → Main orchestration layer
-- **decision_maker.py** → Determines intent & routing
-- **memory.py** → Stores and retrieves contextual data
-- **sentiment_analysis.py** → Emotional context processing
-- **reinforcement.py** → Behavior adaptation (future)
-- **vision.py** → Computer vision (planned)
-- **speech.py / voice.py** → Audio interaction
-- **training.py** → Model tuning / learning pipeline
-
----
-
-### System Layer (`core/system/`)
-- **config_loader.py** → Centralized config management
-- **file_manager.py** → File operations & persistence
-- **logger.py** → System logging
-- **system_monitor.py** → Health + performance tracking
-- **update_schema.py** → Data structure evolution
+These systems will be added around the stable core rather than folded into one monolithic application.
 
 ---
 
-### Interface Layer (`interface/`)
-- Desktop UI components
-- Configuration panels
-- Main menu system (`main_menu.py`)
-- Developer + settings interfaces
+## 🧠 Architecture
+
+Snowball is being designed as a collection of small layers with clear responsibilities.
+
+```text
+                   ┌─────────────────────┐
+                   │   Future Clients    │
+                   │ Mobile / Web / Bots │
+                   └──────────┬──────────┘
+                              │
+                         HTTP / JSON
+                              │
+                   ┌──────────▼──────────┐
+                   │       FastAPI       │
+                   │     core/api/       │
+                   └──────────┬──────────┘
+                              │
+                   ┌──────────▼──────────┐
+                   │   Snowball AI Core  │
+                   │      core/ai/       │
+                   └──────┬───────┬──────┘
+                          │       │
+                    ┌─────▼───┐ ┌─▼──────────┐
+                    │ Memory  │ │   Ollama   │
+                    │ JSONL   │ │   Models   │
+                    └─────────┘ └────────────┘
+
+                 Future integration layer:
+                          n8n
+                           │
+            ┌──────────────┼──────────────┐
+            ▼              ▼              ▼
+         Calendar        Files         Devices
+         Messages       Webhooks       Services
+```
+
+The long-term goal is for interfaces and integrations to communicate with Snowball through stable boundaries rather than reaching directly into the AI core.
 
 ---
 
-### Integration Layer (`core/integration/`)
-- Cloud sync
-- Device sync
-- Mobile communication
+## 📁 Current Project Structure
+
+```text
+Snowball/
+├── core/
+│   ├── ai/
+│   │   ├── chat.py
+│   │   ├── decision_maker.py
+│   │   ├── memory.py
+│   │   ├── orchestrator.py
+│   │   └── router.py
+│   │
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── chat_api.py
+│   │   └── server.py
+│   │
+│   └── system/
+│       ├── advanced_logger.py
+│       ├── config_loader.py
+│       └── logger.py
+│
+├── storage/
+│   └── memory/
+│       └── local_memory.jsonl
+│
+├── tests/
+├── requirements.txt
+├── pytest.ini
+└── README.md
+```
+
+Runtime memory and other generated storage files are intentionally excluded from Git.
 
 ---
 
-### Storage Layer (`storage/`)
-- Logs
-- Audio
-- Structured data
-- Model artifacts
+## 💾 Persistent Memory
+
+Persistent memory is one of Snowball's core architectural requirements.
+
+Snowball can store conversational interactions locally in:
+
+```text
+storage/memory/local_memory.jsonl
+```
+
+When Snowball starts again, persisted interactions are loaded back into memory and can be retrieved as context for future conversations.
+
+For example:
+
+```text
+User:
+My Neptune 4 printer is named Kraken.
+
+Snowball:
+Got it. Kraken is your Neptune 4 printer.
+```
+
+After Snowball is stopped and restarted:
+
+```text
+User:
+What is Kraken?
+
+Snowball:
+Kraken is your Neptune 4 printer.
+```
+
+This restart behavior is protected by an automated regression test.
+
+The current memory system uses lightweight local retrieval. More advanced semantic, episodic, project, preference, and structured memory systems are planned as later layers.
 
 ---
 
-### Additional Modules
-- 🎮 `games/` → Interactive environments (Snake, Risk, etc.)
-- 🤖 `inmoov/` → Robotics integration
-- 📱 `mobile_integration/` → Cross-device interaction
-- ⛏️ `minecraft_integration/` → Experimental AI gameplay
+## 🤖 Local Models
+
+Snowball currently supports local models through **Ollama**.
+
+The AI architecture allows models to act as interchangeable reasoning engines rather than defining Snowball's identity.
+
+Different models may eventually be selected for tasks such as:
+
+- conversation
+- planning
+- reasoning
+- criticism
+- summarization
+- specialized tool use
+
+This allows the underlying models to evolve without rebuilding Snowball around a particular provider.
 
 ---
 
-## ✨ Current Capabilities
+## 🔌 HTTP API
 
-- Text-based interaction via local or API models
-- Basic conversational memory
-- Modular AI routing (decision-based model selection)
-- Voice input/output (in development)
-- Multi-module architecture ready for expansion
+Snowball exposes a FastAPI service.
+
+Start it from the project root:
+
+```bash
+python -m uvicorn core.api.server:app --host 127.0.0.1 --port 8000
+```
+
+The API is currently bound to localhost intentionally.
+
+Once running, FastAPI also provides interactive API documentation at:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+and an OpenAPI schema at:
+
+```text
+http://127.0.0.1:8000/openapi.json
+```
+
+### Health
+
+```http
+GET /health
+```
+
+Example response:
+
+```json
+{
+  "status": "ok",
+  "service": "Snowball AI/OS"
+}
+```
+
+This is a lightweight service liveness check.
+
+### Status
+
+```http
+GET /status
+```
+
+Example response:
+
+```json
+{
+  "service": "Snowball AI/OS",
+  "version": "0.1.0",
+  "status": "ok",
+  "capabilities": [
+    "chat",
+    "persistent_memory"
+  ]
+}
+```
+
+This endpoint describes the currently exposed Snowball service and its core capabilities.
+
+### Chat
+
+```http
+POST /chat
+```
+
+Request:
+
+```json
+{
+  "message": "What is Kraken?"
+}
+```
+
+Response:
+
+```json
+{
+  "response": "Kraken is your Neptune 4 printer."
+}
+```
+
+The `/chat` endpoint passes the message through Snowball's internal chat API and AI core.
 
 ---
 
-## ⚙️ Getting Started
+## ⚙️ Installation
 
 ### Requirements
 
 - Python 3.10+
-- Ollama (for local LLM support) *(optional but recommended)*
+- Ollama for local model-backed conversation
+- Git
 
-### Install
+Clone the repository:
 
 ```bash
-git clone https://github.com/Fll0yd/Snowball.git
+git clone https://github.com/KenBoller/Snowball.git
 cd Snowball
-pip install -r requirements.txt
-Run
-python interface/main_menu.py
 ```
 
-🔥 Key Design Concepts
-1. Modular Intelligence
+Install the core runtime dependencies:
 
-Each AI function is separated into its own module, allowing:
+```bash
+python -m pip install -r requirements.txt
+```
 
-Independent upgrades
-Easy experimentation
-Scalable architecture
-2. Model Routing
+Current core dependencies are intentionally kept small:
 
-Snowball can route requests between:
+- FastAPI
+- Uvicorn
+- Pydantic
+- Requests
+- Cachetools
 
-Fast lightweight models
-Planning models
-Deep reasoning models
+Large optional systems such as voice, games, robotics, cloud integrations, and embeddings will use separate dependency groups as they are reintroduced.
 
-This enables:
+---
 
-Performance optimization
-Cost efficiency
-Smarter responses
-3. Persistent Memory
+## 🧪 Tests
 
-Snowball is designed to:
+Run the complete test suite from the project root:
 
-Store interactions
-Recall past context
-Build long-term understanding
-4. Multi-Environment Presence
+```bash
+pytest -v
+```
 
-Snowball is being built to exist across:
+The suite currently protects several important architectural boundaries:
 
-Desktop
-Mobile
-Games
-Robotics platforms
-⚠️ Current Limitations
-No unified orchestration layer (modules loosely connected)
-Memory system is basic (not fully contextual or structured)
-No centralized API interface
-UI is functional but not polished
-No containerization or deployment pipeline
-Some modules are placeholders or experimental
-🚧 High-Impact Improvements (Next Steps)
-🧠 Core System
-Build a central orchestrator service
-Standardize module interfaces (input/output contracts)
-Introduce async processing (event-driven architecture)
-🧩 Memory System
-Move to structured memory (vector DB or embeddings)
-Add:
-short-term memory
-long-term memory
-episodic memory
-🔌 API Layer
-Create a unified API:
-/chat
-/memory
-/tasks
-Enable external integrations
-🗣️ Voice System
-Replace blocking voice loop with async streaming
-Add wake-word detection
-Improve latency + responsiveness
-🖥️ UI / UX
-Replace current UI with:
-modern desktop UI (PySide / Electron)
-or web-based dashboard (React + FastAPI)
-☁️ Deployment
-Dockerize system
-Add CI/CD pipeline
-Enable cloud + local hybrid mode
-🤖 Robotics Integration
-Connect with InMoov system
-Sensor input → AI processing → physical response
-🧊 Snowball Ecosystem (Future)
+- persistent memory storage
+- memory recovery after reinitialization
+- decision-making behavior
+- logging
+- operation without Ollama
+- internal Python chat API
+- FastAPI service behavior
+- `/status` API contract
+- `/chat` HTTP contract
 
-Snowball is designed to support modular extensions:
+The goal is to make Snowball easier to evolve without silently breaking functionality that already works.
 
-🧠 Core AI Engine
-🗣️ Voice Interaction Layer
-🧒 Stutter Assistance Module (speech coaching)
-🏠 Smart Home Integration
-🎮 Game AI Integration
-🤖 Robotics Control Layer
-🧊 Why This Project Matters
+---
 
-Snowball demonstrates:
+## 🧭 Development Direction
 
-Systems thinking over isolated scripts
-Modular architecture design
-AI orchestration concepts
-Real-world integration planning
-Long-term product vision
+Snowball previously grew across many experiments at once: desktop interfaces, games, voice, cloud services, mobile integration, Minecraft, robotics, memory systems, and other prototypes.
 
-This is not just a project.
+The current development strategy is intentionally different.
 
-It is the foundation of a personal AI platform.
+### Build the Snowball core first.
 
-👤 Author
+The near-term architecture is:
 
-Kenneth Lloyd Boller
-AI Systems Builder | Automation Engineer | Creator of Snowball
+```text
+Existing Python AI
+        │
+        ▼
+Persistent Memory
+        │
+        ▼
+FastAPI
+        │
+        ▼
+n8n
+        │
+        ├── Mobile
+        ├── Messages
+        ├── Calendar
+        ├── Reminders
+        ├── Files
+        └── Webhooks
+```
 
-📝 Note to Future Me
+Only components that make Snowball uniquely Snowball should require custom implementation.
 
-This is the one.
+Commodity integration work can be delegated to established tools and services.
 
-Not the cleanest.
-Not the most finished.
-But the most important.
+---
 
-When you come back to this:
+## 🧩 Design Principles
 
-Don’t rewrite everything
-Don’t chase perfection
+### One Snowball
 
-Just:
+Desktop, mobile, games, automation systems, and future robotics should not create separate Snowball instances with separate identities.
 
-Connect the pieces
-Make one clean execution path
-Ship something usable
+They should be different interfaces to the same underlying system.
 
-Snowball doesn’t need to be perfect.
+### Memory is infrastructure
 
-It just needs to start feeling alive.
+Memory is not an optional chat feature. Persistent context is part of Snowball's foundation.
+
+### Models are replaceable
+
+Snowball should not depend on one LLM vendor, model family, or inference environment.
+
+### Stable boundaries
+
+External systems should interact with defined APIs rather than becoming tightly coupled to Snowball's internal implementation.
+
+### Build the unique parts
+
+Do not build everything Snowball can use.
+
+Build the part that makes it Snowball.
+
+---
+
+## 🗺️ Long-Term Vision
+
+Future Snowball layers may include:
+
+- working memory
+- episodic memory
+- semantic facts
+- project memory
+- preference memory
+- procedural memory
+- automation history
+- game strategy memory
+- file understanding
+- system and hardware monitoring
+- mobile interfaces
+- voice interaction
+- opt-in vision
+- calendar and communication integrations
+- smart-device control
+- game-playing environments
+- InMoov robotics
+
+The eventual goal is not a collection of disconnected AI applications.
+
+It is one persistent intelligence layer capable of interacting through many environments.
+
+---
+
+## 🔐 Security Philosophy
+
+As Snowball gains access to files, devices, accounts, and automation systems, permissions will become increasingly important.
+
+Future integrations should distinguish actions such as:
+
+```text
+READ
+WRITE
+EXECUTE
+DELETE
+EXTERNAL
+PURCHASE
+DEVICE
+SENSITIVE
+```
+
+High-consequence actions should require explicit authorization.
+
+Snowball should gain capabilities deliberately rather than receiving unrestricted access simply because an integration exists.
+
+---
+
+## 👤 Author
+
+**Kenneth Lloyd Boller**
+
+AI Systems Builder • Automation Engineer • Creator of Snowball AI/OS
+
+---
+
+## ☃️ Current Mission
+
+Snowball does not need every planned feature at once.
+
+It needs a small core that can reliably:
+
+```text
+Remember
+   ↓
+Think
+   ↓
+Respond
+   ↓
+Expose a stable interface
+   ↓
+Grow without being rebuilt
+```
+
+Build the foundation first.
+
+Then let the snowball roll.
