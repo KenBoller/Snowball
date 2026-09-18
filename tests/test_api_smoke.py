@@ -25,3 +25,27 @@ def test_status_endpoint():
     assert data["status"] == "ok"
     assert "chat" in data["capabilities"]
     assert "persistent_memory" in data["capabilities"]
+
+
+def test_chat_endpoint_contract(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    monkeypatch.setattr(
+        server,
+        "send_message",
+        lambda message: f"Echo: {message}",
+    )
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/chat",
+        json={"message": "hello Snowball"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "response": "Echo: hello Snowball"
+    }
