@@ -27,6 +27,17 @@ def health() -> dict[str, str]:
         "service": "Snowball AI/OS",
     }
 
+@app.get("/status")
+def status() -> dict[str, object]:
+    return {
+        "service": "Snowball AI/OS",
+        "version": "0.1.0",
+        "status": "ok",
+        "capabilities": [
+            "chat",
+            "persistent_memory",
+        ],
+    }
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
