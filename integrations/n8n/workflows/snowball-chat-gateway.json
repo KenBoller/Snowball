@@ -1,0 +1,96 @@
+{
+  "name": "Snowball Chat Gateway",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "snowball-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "983afa17-1364-46c9-b730-29fce56e5973",
+      "name": "Webhook",
+      "webhookId": "deafb728-7c34-4041-9b08-eefe14b515ce"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/chat",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.body.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        176,
+        0
+      ],
+      "id": "7ec5e1cd-e4f4-4dfe-9254-f38a143ab308",
+      "name": "Send to Snowball"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        400,
+        0
+      ],
+      "id": "1f02d948-1d1d-4040-9f13-4e4881fd9294",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send to Snowball",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Snowball": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a68db749-7e90-4515-bb9f-60b877084537",
+  "meta": {
+    "instanceId": "4bf18d250ce207349cb79b89071e65fb7cc9596dbeed51ad267d8f26bdfb0c1e"
+  },
+  "nodeGroups": [],
+  "id": "RGfC783KyzoeFFLC",
+  "tags": []
+}
