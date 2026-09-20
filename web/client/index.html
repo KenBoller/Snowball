@@ -5,87 +5,497 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Snowball AI/OS</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #080b10;
+            --panel: #10151d;
+            --panel-light: #171e29;
+            --border: #263142;
+            --text: #eef4ff;
+            --muted: #8996a8;
+            --accent: #67d9ff;
+            --accent-dark: #143746;
+            --user: #1b4965;
+            --snowball: #18202b;
+            --danger: #ff7b7b;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 1000px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel);
+        }
+
+        /* ---------- Header ---------- */
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(16, 21, 29, 0.96);
+        }
+
+        .identity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--accent-dark);
+            font-size: 25px;
+        }
+
+        .identity-text h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .status {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 6px;
+            border-radius: 50%;
+            background: #56e39f;
+        }
+
+        .version {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* ---------- Chat ---------- */
+
+        #chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 18px;
+        }
+
+        .message-row {
+            display: flex;
+            margin-bottom: 18px;
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .message-row.snowball {
+            justify-content: flex-start;
+        }
+
+        .message {
+            max-width: min(75%, 680px);
+            padding: 12px 15px;
+            border-radius: 16px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .message-row.user .message {
+            background: var(--user);
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-row.snowball .message {
+            background: var(--snowball);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 5px;
+        }
+
+        .speaker {
+            margin-bottom: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .user .speaker {
+            color: #b8e8ff;
+        }
+
+        .thinking {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .error {
+            color: var(--danger);
+        }
+
+        /* ---------- Composer ---------- */
+
+        .composer {
+            padding: 14px;
+            border-top: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        #chat-form {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--panel-light);
+        }
+
+        #message {
+            flex: 1;
+            min-height: 42px;
+            max-height: 150px;
+            resize: none;
+            border: none;
+            outline: none;
+            padding: 10px;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+        }
+
+        #message::placeholder {
+            color: var(--muted);
+        }
+
+        #send-button {
+            height: 42px;
+            padding: 0 18px;
+            border: none;
+            border-radius: 11px;
+            background: var(--accent);
+            color: #051018;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #send-button:hover {
+            filter: brightness(1.08);
+        }
+
+        #send-button:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .hint {
+            margin-top: 7px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        /* ---------- Mobile ---------- */
+
+        @media (max-width: 600px) {
+            .version {
+                display: none;
+            }
+
+            #chat {
+                padding: 16px 10px;
+            }
+
+            .message {
+                max-width: 88%;
+            }
+
+            header {
+                padding: 12px 14px;
+            }
+
+            .composer {
+                padding: 8px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>☃️ Snowball AI/OS</h1>
+<div class="app">
 
-    <div id="chat">
-        <p><strong>Snowball:</strong> I'm online.</p>
+    <header>
+        <div class="identity">
+            <div class="avatar">☃️</div>
+
+            <div class="identity-text">
+                <h1>Snowball AI/OS</h1>
+
+                <div class="status">
+                    <span class="status-dot"></span>
+                    Online
+                </div>
+            </div>
+        </div>
+
+        <div class="version">
+            v0.1
+        </div>
+    </header>
+
+    <main id="chat">
+
+        <div class="message-row snowball">
+            <div class="message">
+                <div class="speaker">Snowball</div>
+                I'm online. What are we working on?
+            </div>
+        </div>
+
+    </main>
+
+    <div class="composer">
+
+        <form id="chat-form">
+
+            <textarea
+                id="message"
+                placeholder="Talk to Snowball..."
+                rows="1"
+                autocomplete="off"
+            ></textarea>
+
+            <button
+                id="send-button"
+                type="submit"
+            >
+                Send
+            </button>
+
+        </form>
+
+        <div class="hint">
+            Enter to send • Shift + Enter for a new line
+        </div>
+
     </div>
 
-    <form id="chat-form">
-        <input
-            id="message"
-            type="text"
-            placeholder="Talk to Snowball..."
-            autocomplete="off"
-            required
-        >
+</div>
 
-        <button type="submit">Send</button>
-    </form>
 
-    <script>
-        const form = document.getElementById("chat-form");
-        const messageInput = document.getElementById("message");
-        const chat = document.getElementById("chat");
-    
-        const SNOWBALL_WEBHOOK =
-            "http://localhost:5678/webhook/snowball-chat";
-    
-        form.addEventListener("submit", async (event) => {
+<script>
+    const form = document.getElementById("chat-form");
+    const messageInput = document.getElementById("message");
+    const chat = document.getElementById("chat");
+    const sendButton = document.getElementById("send-button");
+
+    const SNOWBALL_WEBHOOK =
+        "http://localhost:5678/webhook/snowball-chat";
+
+
+    function scrollToBottom() {
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+
+    function addMessage(speaker, text, type = "") {
+
+        const row = document.createElement("div");
+
+        row.className =
+            `message-row ${speaker === "You" ? "user" : "snowball"}`;
+
+
+        const message = document.createElement("div");
+
+        message.className = "message";
+
+
+        const speakerLabel = document.createElement("div");
+
+        speakerLabel.className = "speaker";
+        speakerLabel.textContent = speaker;
+
+
+        const content = document.createElement("div");
+
+        content.textContent = text;
+
+        if (type) {
+            content.classList.add(type);
+        }
+
+
+        message.appendChild(speakerLabel);
+        message.appendChild(content);
+
+        row.appendChild(message);
+        chat.appendChild(row);
+
+        scrollToBottom();
+
+        return row;
+    }
+
+
+    function resizeInput() {
+
+        messageInput.style.height = "auto";
+
+        messageInput.style.height =
+            Math.min(messageInput.scrollHeight, 150) + "px";
+    }
+
+
+    messageInput.addEventListener("input", resizeInput);
+
+
+    messageInput.addEventListener("keydown", (event) => {
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
             event.preventDefault();
-    
-            const message = messageInput.value.trim();
-    
-            if (!message) {
-                return;
-            }
-    
-            chat.innerHTML += `
-                <p><strong>You:</strong> ${message}</p>
-            `;
-    
-            messageInput.value = "";
-            messageInput.disabled = true;
-    
-            try {
-                const response = await fetch(SNOWBALL_WEBHOOK, {
+
+            form.requestSubmit();
+        }
+    });
+
+
+    form.addEventListener("submit", async (event) => {
+
+        event.preventDefault();
+
+
+        const message = messageInput.value.trim();
+
+        if (!message) {
+            return;
+        }
+
+
+        addMessage("You", message);
+
+
+        messageInput.value = "";
+        resizeInput();
+
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+
+
+        const thinkingRow =
+            addMessage(
+                "Snowball",
+                "Thinking...",
+                "thinking"
+            );
+
+
+        try {
+
+            const response = await fetch(
+                SNOWBALL_WEBHOOK,
+                {
                     method: "POST",
+
                     headers: {
                         "Content-Type": "application/json"
                     },
+
                     body: JSON.stringify({
                         message: message
                     })
-                });
-    
-                if (!response.ok) {
-                    throw new Error(
-                        `Snowball returned HTTP ${response.status}`
-                    );
                 }
-    
-                const data = await response.json();
-    
-                chat.innerHTML += `
-                    <p><strong>Snowball:</strong> ${data.response}</p>
-                `;
-            } catch (error) {
-                console.error(error);
-    
-                chat.innerHTML += `
-                    <p><strong>Snowball:</strong>
-                    I couldn't reach my brain. Check the console.
-                    </p>
-                `;
-            } finally {
-                messageInput.disabled = false;
-                messageInput.focus();
+            );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Snowball returned HTTP ${response.status}`
+                );
             }
-        });
-    </script>
+
+
+            const data = await response.json();
+
+
+            thinkingRow.remove();
+
+
+            addMessage(
+                "Snowball",
+                data.response ?? "I received an empty response."
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            thinkingRow.remove();
+
+
+            addMessage(
+                "Snowball",
+                "I couldn't reach my brain. Make sure Snowball and n8n are running.",
+                "error"
+            );
+        }
+
+        finally {
+
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+
+            messageInput.focus();
+        }
+    });
+
+
+    messageInput.focus();
+</script>
+
 </body>
 </html>
