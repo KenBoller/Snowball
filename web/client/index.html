@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Snowball AI/OS</title>
+</head>
+
+<body>
+
+    <h1>☃️ Snowball AI/OS</h1>
+
+    <div id="chat">
+        <p><strong>Snowball:</strong> I'm online.</p>
+    </div>
+
+    <form id="chat-form">
+        <input
+            id="message"
+            type="text"
+            placeholder="Talk to Snowball..."
+            autocomplete="off"
+            required
+        >
+
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        const form = document.getElementById("chat-form");
+        const messageInput = document.getElementById("message");
+        const chat = document.getElementById("chat");
+    
+        const SNOWBALL_WEBHOOK =
+            "http://localhost:5678/webhook/snowball-chat";
+    
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+    
+            const message = messageInput.value.trim();
+    
+            if (!message) {
+                return;
+            }
+    
+            chat.innerHTML += `
+                <p><strong>You:</strong> ${message}</p>
+            `;
+    
+            messageInput.value = "";
+            messageInput.disabled = true;
+    
+            try {
+                const response = await fetch(SNOWBALL_WEBHOOK, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: message
+                    })
+                });
+    
+                if (!response.ok) {
+                    throw new Error(
+                        `Snowball returned HTTP ${response.status}`
+                    );
+                }
+    
+                const data = await response.json();
+    
+                chat.innerHTML += `
+                    <p><strong>Snowball:</strong> ${data.response}</p>
+                `;
+            } catch (error) {
+                console.error(error);
+    
+                chat.innerHTML += `
+                    <p><strong>Snowball:</strong>
+                    I couldn't reach my brain. Check the console.
+                    </p>
+                `;
+            } finally {
+                messageInput.disabled = false;
+                messageInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
