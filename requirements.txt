@@ -1,7 +1,7 @@
 # Snowball AI/OS core runtime dependencies
 #
 # Keep this file intentionally small.
-# Optional systems such as embeddings, Cosmos, voice, games, and robotics
+# Optional systems such as Cosmos, voice, games, and robotics
 # should use separate dependency groups when they are added back.
 
 cachetools==5.5.1
@@ -9,3 +9,8 @@ requests==2.34.2
 fastapi==0.136.3
 pydantic==2.10.6
 uvicorn==0.34.0
+
+# Semantic knowledge and memory
+ollama==0.6.2
+PyMuPDF==1.28.2
+chromadb==1.5.9
