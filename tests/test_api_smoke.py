@@ -257,3 +257,94 @@ def test_delete_knowledge_document_endpoint_returns_404_when_missing(
     assert response.json() == {
         "detail": "Knowledge document not found."
     }
+
+def test_search_knowledge_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    expected_results = [
+        {
+            "text": "Snowball began as one AI across multiple games.",
+            "metadata": {
+                "document_id": "snowball-archive",
+                "filename": "archive.docx",
+                "chunk_index": 7,
+                "authority": "historical_reference",
+                "provenance_source_type": "snowball_project_document",
+            },
+            "distance": 0.25,
+        }
+    ]
+
+    class FakeMemoryManager:
+        def search_knowledge(
+            self,
+            question,
+            *,
+            result_count=5,
+        ):
+            assert question == "How did Snowball begin?"
+            assert result_count == 3
+            return expected_results
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/knowledge/search",
+        json={
+            "query": "How did Snowball begin?",
+            "limit": 3,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "query": "How did Snowball begin?",
+        "results": expected_results,
+        "result_count": 1,
+    }
+
+def test_search_knowledge_endpoint_rejects_blank_query():
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/knowledge/search",
+        json={
+            "query": "   ",
+            "limit": 3,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_search_knowledge_endpoint_rejects_invalid_limit():
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/knowledge/search",
+        json={
+            "query": "How did Snowball begin?",
+            "limit": 0,
+        },
+    )
+
+    assert response.status_code == 422

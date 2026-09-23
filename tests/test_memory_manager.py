@@ -358,3 +358,46 @@ def test_delete_knowledge_document_delegates_to_vector_store():
     )
 
     assert deleted is True
+
+def test_search_knowledge_delegates_to_retrieval(monkeypatch):
+    import core.memory.retrieval as retrieval
+
+    expected_results = [
+        {
+            "text": "Snowball began as one AI across multiple games.",
+            "metadata": {
+                "document_id": "snowball-archive",
+                "filename": "archive.docx",
+                "chunk_index": 7,
+                "authority": "historical_reference",
+                "provenance_source_type": "snowball_project_document",
+            },
+            "distance": 0.25,
+        }
+    ]
+
+    def fake_retrieve_relevant_chunks(
+        question,
+        vector_store,
+        result_count=5,
+    ):
+        assert question == "How did Snowball begin?"
+        assert result_count == 3
+        return expected_results
+
+    monkeypatch.setattr(
+        retrieval,
+        "retrieve_relevant_chunks",
+        fake_retrieve_relevant_chunks,
+    )
+
+    manager = MemoryManager(
+        vector_store=object()
+    )
+
+    results = manager.search_knowledge(
+        "How did Snowball begin?",
+        result_count=3,
+    )
+
+    assert results == expected_results

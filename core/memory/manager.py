@@ -62,6 +62,20 @@ class MemoryManager:
     ) -> bool:
         return self.vector_store.delete_document(document_id)
 
+    def search_knowledge(
+        self,
+        question: str,
+        *,
+        result_count: int = 5,
+    ) -> list[dict]:
+        from core.memory.retrieval import retrieve_relevant_chunks
+
+        return retrieve_relevant_chunks(
+            question,
+            vector_store=self.vector_store,
+            result_count=result_count,
+        )
+
     def get_knowledge_context(
         self,
         question: str,

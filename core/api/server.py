@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from core.api.chat_api import get_agent, send_message
 
@@ -11,6 +11,17 @@ app = FastAPI(
     version="0.1.0",
 )
 
+class KnowledgeSearchRequest(BaseModel):
+    query: str
+    limit: int = Field(default=5, gt=0)
+
+    @field_validator("query")
+    @classmethod
+    def query_cannot_be_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("query cannot be blank.")
+
+        return value
 
 class ChatRequest(BaseModel):
     message: str
@@ -53,6 +64,21 @@ def knowledge() -> dict[str, object]:
             document["chunk_count"]
             for document in documents
         ),
+    }
+
+@app.post("/knowledge/search")
+def search_knowledge(request: KnowledgeSearchRequest) -> dict:
+    agent = get_agent()
+
+    results = agent.memory_manager.search_knowledge(
+        request.query,
+        result_count=request.limit,
+    )
+
+    return {
+        "query": request.query,
+        "results": results,
+        "result_count": len(results),
     }
 
 @app.get("/knowledge/{document_id}")
