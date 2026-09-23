@@ -141,3 +141,11 @@ class VectorStore:
 
     def count(self) -> int:
         return self.collection.count()
+    
+    def delete_document(self, document_id: str) -> None:
+        if not document_id.strip():
+            raise ValueError("document_id cannot be empty.")
+
+        self.collection.delete(
+            where={"document_id": document_id}
+        )

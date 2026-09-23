@@ -28,7 +28,44 @@ def test_ingest_text_file(tmp_path: Path):
     assert result["full_text"] == "Kraken is my Neptune 4 printer."
     assert result["text_length"] == len(result["full_text"])
 
+def test_reingestion_with_empty_document_removes_old_chunks(
+    tmp_path: Path,
+    monkeypatch,
+):
+    document = tmp_path / "empty-update.txt"
+    store = VectorStore(tmp_path / "vectors")
 
+    monkeypatch.setattr(
+        "core.knowledge.ingestion.create_embeddings",
+        lambda texts: [[0.1, 0.2, 0.3] for _ in texts],
+    )
+
+    document.write_text(
+        "Snowball has knowledge.",
+        encoding="utf-8",
+    )
+
+    ingest_into_vector_store(
+        document,
+        store,
+        document_id="empty-update",
+    )
+
+    assert store.count() == 1
+
+    document.write_text("", encoding="utf-8")
+
+    result = ingest_into_vector_store(
+        document,
+        store,
+        document_id="empty-update",
+    )
+
+    assert result["chunk_count"] == 0
+    assert result["vector_ids"] == []
+    assert store.count() == 0
+
+    
 def test_ingest_markdown_file(tmp_path: Path):
     document = tmp_path / "snowball.md"
     document.write_text(
@@ -96,6 +133,60 @@ def test_ingest_into_vector_store(tmp_path: Path):
     assert len(result["vector_ids"]) == result["chunk_count"]
 
     assert store.count() == result["chunk_count"]
+
+def test_reingestion_replaces_stale_document_chunks(
+    tmp_path: Path,
+    monkeypatch,
+):
+    document = tmp_path / "changing-notes.txt"
+    store = VectorStore(tmp_path / "vectors")
+
+    # Keep the test deterministic and independent of Ollama.
+    monkeypatch.setattr(
+        "core.knowledge.ingestion.create_embeddings",
+        lambda texts: [[0.1, 0.2, 0.3] for _ in texts],
+    )
+
+    # Version 1 is large enough to create multiple chunks.
+    document.write_text(
+        "A" * 250,
+        encoding="utf-8",
+    )
+
+    first_result = ingest_into_vector_store(
+        document,
+        store,
+        document_id="changing-document",
+        chunk_size=100,
+        overlap=0,
+    )
+
+    assert first_result["chunk_count"] == 3
+    assert store.count() == 3
+
+    # Version 2 is much shorter and should replace version 1.
+    document.write_text(
+        "Snowball updated knowledge.",
+        encoding="utf-8",
+    )
+
+    second_result = ingest_into_vector_store(
+        document,
+        store,
+        document_id="changing-document",
+        chunk_size=100,
+        overlap=0,
+    )
+
+    assert second_result["chunk_count"] == 1
+    assert store.count() == 1
+
+    stored = store.collection.get(
+        where={"document_id": "changing-document"}
+    )
+
+    assert stored["ids"] == ["changing-document_chunk_0"]
+    assert stored["documents"] == ["Snowball updated knowledge."]
 
 
 def test_ingested_document_can_be_retrieved_semantically(

@@ -167,6 +167,8 @@ def ingest_into_vector_store(
     if document_id is None:
         document_id = uuid4().hex
 
+    vector_store.delete_document(document_id)
+
     if not chunks:
         return {
             "document_id": document_id,

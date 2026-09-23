@@ -124,3 +124,42 @@ def test_vector_store_rejects_invalid_result_count(
             [1.0, 0.0],
             result_count=0,
         )
+
+
+def test_delete_document_removes_only_matching_document(tmp_path):
+    store = VectorStore(tmp_path)
+
+    chunks = [
+        {
+            "chunk_index": 0,
+            "text": "Alpha knowledge",
+            "start_char": 0,
+            "end_char": 15,
+        }
+    ]
+
+    store.add_chunks(
+        chunks=chunks,
+        embeddings=[[1.0, 0.0]],
+        document_id="alpha",
+        filename="alpha.txt",
+    )
+
+    store.add_chunks(
+        chunks=chunks,
+        embeddings=[[0.0, 1.0]],
+        document_id="beta",
+        filename="beta.txt",
+    )
+
+    assert store.count() == 2
+
+    store.delete_document("alpha")
+
+    assert store.count() == 1
+
+    remaining = store.collection.get(
+        where={"document_id": "beta"}
+    )
+
+    assert remaining["ids"] == ["beta_chunk_0"]
