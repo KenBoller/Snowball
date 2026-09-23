@@ -10,6 +10,7 @@ from core.knowledge.chunking import chunk_text
 from core.knowledge.embeddings import create_embeddings
 from core.knowledge.vector_store import VectorStore
 
+from docx import Document
 
 TEXT_SUFFIXES = {
     ".txt",
@@ -122,6 +123,9 @@ def ingest_document(file_path: str | Path) -> dict:
     if suffix == ".pdf":
         return extract_text_from_pdf(path)
 
+    if suffix == ".docx":
+        return extract_text_from_docx(path)
+
     if suffix in TEXT_SUFFIXES:
         return extract_text_from_text_file(path)
 
@@ -193,4 +197,34 @@ def ingest_into_vector_store(
         "source_type": document["source_type"],
         "chunk_count": len(chunks),
         "vector_ids": vector_ids,
+    }
+
+
+def extract_text_from_docx(file_path: str | Path) -> dict:
+    path = Path(file_path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    if path.suffix.lower() != ".docx":
+        raise ValueError("File must be a DOCX.")
+
+    document = Document(path)
+
+    paragraphs = [
+        paragraph.text
+        for paragraph in document.paragraphs
+        if paragraph.text.strip()
+    ]
+
+    full_text = "\n\n".join(paragraphs)
+
+    return {
+        "source_type": "docx",
+        "file_path": str(path),
+        "filename": path.name,
+        "page_count": None,
+        "text_length": len(full_text),
+        "pages": None,
+        "full_text": full_text,
     }

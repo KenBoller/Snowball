@@ -14,3 +14,6 @@ uvicorn==0.34.0
 ollama==0.6.2
 PyMuPDF==1.28.2
 chromadb==1.5.9
+
+
+python-docx

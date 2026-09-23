@@ -3,12 +3,15 @@ from pathlib import Path
 import pytest
 from core.knowledge.ingestion import (
     build_provenance_metadata,
+    extract_text_from_docx,
     extract_text_from_text_file,
     ingest_document,
     ingest_into_vector_store,
 )
 
 from core.knowledge.vector_store import VectorStore
+
+from docx import Document
 
 
 def test_ingest_text_file(tmp_path: Path):
@@ -222,3 +225,25 @@ def test_ingestion_preserves_provenance_metadata(
         == "historical Snowball documentation"
     )
     assert metadata["filename"] == "snowball-history.txt"
+
+def test_extract_text_from_docx(tmp_path: Path):
+    path = tmp_path / "example.docx"
+
+    document = Document()
+    document.add_paragraph("Snowball AI/OS")
+    document.add_paragraph("Unified project knowledge")
+    document.save(path)
+
+    result = extract_text_from_docx(path)
+
+    assert result["source_type"] == "docx"
+    assert result["filename"] == "example.docx"
+    assert "Snowball AI/OS" in result["full_text"]
+    assert "Unified project knowledge" in result["full_text"]
+
+
+def test_extract_text_from_docx_requires_existing_file(tmp_path: Path):
+    missing = tmp_path / "missing.docx"
+
+    with pytest.raises(FileNotFoundError):
+        extract_text_from_docx(missing)
