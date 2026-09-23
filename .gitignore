@@ -37,6 +37,7 @@ desktop.ini
 # Snowball runtime data
 storage/logs/
 storage/memory/
+storage/vectors/
 
 # Generated logs
 *.log
