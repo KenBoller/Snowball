@@ -72,3 +72,84 @@ def test_build_knowledge_context_rejects_empty_question(
             "   ",
             vector_store=store,
         )
+
+
+def test_build_knowledge_context_includes_provenance_metadata(
+    tmp_path: Path,
+):
+    store = VectorStore(tmp_path / "vectors")
+
+    chunks = [
+        {
+            "chunk_index": 0,
+            "text": (
+                "Snowball originally grew from an idea about "
+                "one AI learning across multiple games."
+            ),
+            "start_char": 0,
+            "end_char": 86,
+        }
+    ]
+
+    embeddings = create_embeddings(
+        [chunk["text"] for chunk in chunks]
+    )
+
+    store.add_chunks(
+        chunks=chunks,
+        embeddings=embeddings,
+        document_id="snowball-history",
+        filename="snowball-history.docx",
+        metadata={
+            "provenance_source_type": "snowball_project_document",
+            "authority": "historical_reference",
+            "source_date": "2026-09-23",
+        },
+    )
+
+    context = build_knowledge_context(
+        "Where did Snowball come from?",
+        vector_store=store,
+        result_count=1,
+    )
+
+    assert "SOURCE: snowball-history.docx" in context
+    assert "TYPE: snowball_project_document" in context
+    assert "AUTHORITY: historical_reference" in context
+    assert "DATE: 2026-09-23" in context
+
+
+def test_build_knowledge_context_handles_missing_provenance(
+    tmp_path: Path,
+):
+    store = VectorStore(tmp_path / "vectors")
+
+    chunks = [
+        {
+            "chunk_index": 0,
+            "text": "Kraken is a 3D printer.",
+            "start_char": 0,
+            "end_char": 23,
+        }
+    ]
+
+    embeddings = create_embeddings(
+        [chunk["text"] for chunk in chunks]
+    )
+
+    store.add_chunks(
+        chunks=chunks,
+        embeddings=embeddings,
+        document_id="legacy-notes",
+        filename="legacy-notes.txt",
+    )
+
+    context = build_knowledge_context(
+        "What is Kraken?",
+        vector_store=store,
+        result_count=1,
+    )
+
+    assert "SOURCE: legacy-notes.txt" in context
+    assert "TYPE: unknown" in context
+    assert "AUTHORITY: unknown" in context

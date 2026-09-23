@@ -31,7 +31,10 @@ class FakeMemoryManager:
         return {
             "episodic": "",
             "knowledge": (
-                "[KNOWLEDGE 1 | SOURCE: semantic-regression-test.txt]\n"
+                "[KNOWLEDGE 1 | SOURCE: semantic-regression-test.txt | "
+                "TYPE: snowball_project_document | "
+                "AUTHORITY: historical_reference | "
+                "DATE: 2025-09-30]\n"
                 "Project Firefly's emergency access code is violet-orbit-7319."
             ),
         }

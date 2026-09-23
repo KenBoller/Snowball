@@ -42,8 +42,27 @@ def build_knowledge_context(
             or "unknown"
         )
 
+        authority = metadata.get("authority", "unknown")
+        source_type = metadata.get(
+            "provenance_source_type",
+            metadata.get("source_type", "unknown"),
+        )
+        source_date = metadata.get("source_date")
+
+        header_parts = [
+            f"KNOWLEDGE {index}",
+            f"SOURCE: {source}",
+            f"TYPE: {source_type}",
+            f"AUTHORITY: {authority}",
+        ]
+
+        if source_date:
+            header_parts.append(f"DATE: {source_date}")
+
+        header = " | ".join(header_parts)
+
         sections.append(
-            f"[KNOWLEDGE {index} | SOURCE: {source}]\n{text}"
+            f"[{header}]\n{text}"
         )
 
     return "\n\n".join(sections)
