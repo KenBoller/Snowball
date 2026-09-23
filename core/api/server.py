@@ -11,6 +11,30 @@ app = FastAPI(
     version="0.1.0",
 )
 
+class KnowledgeIngestRequest(BaseModel):
+    path: str
+    document_id: str | None = None
+    metadata: dict[str, object] | None = None
+
+    @field_validator("path")
+    @classmethod
+    def path_cannot_be_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("path cannot be blank.")
+
+        return value
+
+    @field_validator("document_id")
+    @classmethod
+    def document_id_cannot_be_blank(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("document_id cannot be blank.")
+
+        return value
+
 class KnowledgeSearchRequest(BaseModel):
     query: str
     limit: int = Field(default=5, gt=0)
@@ -52,6 +76,7 @@ def status() -> dict[str, object]:
         ],
     }
 
+
 @app.get("/knowledge")
 def knowledge() -> dict[str, object]:
     agent = get_agent()
@@ -65,6 +90,31 @@ def knowledge() -> dict[str, object]:
             for document in documents
         ),
     }
+
+
+@app.post("/knowledge")
+def ingest_knowledge(request: KnowledgeIngestRequest) -> dict:
+    agent = get_agent()
+
+    try:
+        return agent.memory_manager.ingest_document(
+            request.path,
+            document_id=request.document_id,
+            metadata=request.metadata,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        if str(exc).startswith("Unsupported document type:"):
+            raise HTTPException(
+                status_code=400,
+                detail=str(exc),
+            ) from exc
+
+        raise
 
 @app.post("/knowledge/search")
 def search_knowledge(request: KnowledgeSearchRequest) -> dict:

@@ -348,3 +348,202 @@ def test_search_knowledge_endpoint_rejects_invalid_limit():
     )
 
     assert response.status_code == 422
+
+def test_ingest_knowledge_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    expected_result = {
+        "document_id": "snowball-notes",
+        "filename": "snowball-notes.docx",
+        "chunk_count": 4,
+    }
+
+    class FakeMemoryManager:
+        def ingest_document(
+            self,
+            file_path,
+            *,
+            document_id=None,
+            metadata=None,
+            chunk_size=1000,
+            overlap=200,
+        ):
+            assert file_path == r"S:\Documents\snowball-notes.docx"
+            assert document_id == "snowball-notes"
+            assert metadata == {
+                "authority": "reference",
+                "provenance_source_type": "user_document",
+            }
+            assert chunk_size == 1000
+            assert overlap == 200
+
+            return expected_result
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/knowledge",
+        json={
+            "path": r"S:\Documents\snowball-notes.docx",
+            "document_id": "snowball-notes",
+            "metadata": {
+                "authority": "reference",
+                "provenance_source_type": "user_document",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == expected_result
+
+def test_ingest_knowledge_endpoint_rejects_blank_path():
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/knowledge",
+        json={
+            "path": "   ",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_ingest_knowledge_endpoint_rejects_blank_document_id():
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/knowledge",
+        json={
+            "path": r"S:\Documents\snowball-notes.docx",
+            "document_id": "   ",
+        },
+    )
+
+    assert response.status_code == 422
+
+def test_ingest_knowledge_endpoint_returns_404_for_missing_file(
+    monkeypatch,
+):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    class FakeMemoryManager:
+        def ingest_document(self, *args, **kwargs):
+            raise FileNotFoundError(
+                r"File not found: S:\Documents\missing.docx"
+            )
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/knowledge",
+        json={
+            "path": r"S:\Documents\missing.docx",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": r"File not found: S:\Documents\missing.docx"
+    }
+
+
+def test_ingest_knowledge_endpoint_returns_400_for_unsupported_type(
+    monkeypatch,
+):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    class FakeMemoryManager:
+        def ingest_document(self, *args, **kwargs):
+            raise ValueError(
+                "Unsupported document type: .exe"
+            )
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    response = client.post(
+        "/knowledge",
+        json={
+            "path": r"S:\Documents\definitely-not-knowledge.exe",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "Unsupported document type: .exe"
+    }
+
+def test_ingest_knowledge_endpoint_does_not_mask_internal_value_error(
+    monkeypatch,
+):
+    from fastapi.testclient import TestClient
+    import pytest
+
+    import core.api.server as server
+
+    class FakeMemoryManager:
+        def ingest_document(self, *args, **kwargs):
+            raise ValueError("Embedding pipeline exploded.")
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    with pytest.raises(
+        ValueError,
+        match="Embedding pipeline exploded.",
+    ):
+        client.post(
+            "/knowledge",
+            json={
+                "path": r"S:\Documents\valid.docx",
+            },
+        )
