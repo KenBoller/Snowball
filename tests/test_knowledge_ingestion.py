@@ -2,15 +2,13 @@ from pathlib import Path
 
 import pytest
 from core.knowledge.ingestion import (
+    build_provenance_metadata,
     extract_text_from_text_file,
     ingest_document,
     ingest_into_vector_store,
 )
 
-from core.knowledge.ingestion import (
-    extract_text_from_text_file,
-    ingest_document,
-)
+from core.knowledge.vector_store import VectorStore
 
 
 def test_ingest_text_file(tmp_path: Path):
@@ -134,3 +132,93 @@ def test_ingested_document_can_be_retrieved_semantically(
 
     assert len(results) == 1
     assert "Kraken" in results[0]["text"]
+
+
+def test_build_provenance_metadata():
+    metadata = build_provenance_metadata(
+        source_type="snowball_project_document",
+        authority="reference",
+        project="Snowball AI/OS",
+        source_date="2025-09-30",
+        original_source="historical Snowball documentation",
+    )
+
+    assert metadata == {
+        "provenance_source_type": "snowball_project_document",
+        "authority": "reference",
+        "project": "Snowball AI/OS",
+        "source_date": "2025-09-30",
+        "original_source": "historical Snowball documentation",
+    }
+
+
+def test_build_provenance_metadata_omits_optional_empty_fields():
+    metadata = build_provenance_metadata(
+        source_type="snowball_project_document",
+        authority="reference",
+    )
+
+    assert metadata == {
+        "provenance_source_type": "snowball_project_document",
+        "authority": "reference",
+    }
+
+
+def test_ingestion_preserves_provenance_metadata(
+    tmp_path: Path,
+    monkeypatch,
+):
+    document_path = tmp_path / "snowball-history.txt"
+    document_path.write_text(
+        "Snowball began as a personal AI project.",
+        encoding="utf-8",
+    )
+
+    vector_store = VectorStore(
+        tmp_path / "vectors"
+    )
+
+    provenance = build_provenance_metadata(
+        source_type="snowball_project_document",
+        authority="reference",
+        project="Snowball AI/OS",
+        source_date="2025-09-30",
+        original_source="historical Snowball documentation",
+    )
+
+    # Keep this test deterministic and independent of Ollama.
+    monkeypatch.setattr(
+        "core.knowledge.ingestion.create_embeddings",
+        lambda texts: [[0.1, 0.2, 0.3] for _ in texts],
+    )
+
+    result = ingest_into_vector_store(
+        document_path,
+        vector_store,
+        metadata=provenance,
+    )
+
+    assert result["chunk_count"] == 1
+
+    matches = vector_store.search(
+        [0.1, 0.2, 0.3],
+        result_count=1,
+    )
+
+    assert len(matches) == 1
+
+    metadata = matches[0]["metadata"]
+
+    assert metadata["source_type"] == "text"
+    assert (
+        metadata["provenance_source_type"]
+        == "snowball_project_document"
+    )
+    assert metadata["authority"] == "reference"
+    assert metadata["project"] == "Snowball AI/OS"
+    assert metadata["source_date"] == "2025-09-30"
+    assert (
+        metadata["original_source"]
+        == "historical Snowball documentation"
+    )
+    assert metadata["filename"] == "snowball-history.txt"

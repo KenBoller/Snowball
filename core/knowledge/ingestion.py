@@ -17,6 +17,43 @@ TEXT_SUFFIXES = {
     ".markdown",
 }
 
+def build_provenance_metadata(
+    *,
+    source_type: str,
+    authority: str,
+    project: str | None = None,
+    source_date: str | None = None,
+    original_source: str | None = None,
+) -> dict[str, str]:
+    """
+    Build standardized provenance metadata for semantic knowledge.
+
+    Provenance describes where knowledge came from and how Snowball
+    should interpret its authority. It does not determine retrieval
+    relevance.
+    """
+    if not source_type.strip():
+        raise ValueError("source_type cannot be empty.")
+
+    if not authority.strip():
+        raise ValueError("authority cannot be empty.")
+
+    metadata = {
+        "provenance_source_type": source_type.strip(),
+        "authority": authority.strip(),
+    }
+
+    if project:
+        metadata["project"] = project.strip()
+
+    if source_date:
+        metadata["source_date"] = source_date.strip()
+
+    if original_source:
+        metadata["original_source"] = original_source.strip()
+
+    return metadata
+
 
 def extract_text_from_pdf(file_path: str | Path) -> dict:
     path = Path(file_path)
