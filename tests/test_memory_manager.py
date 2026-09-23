@@ -304,3 +304,41 @@ def test_list_knowledge_documents_delegates_to_vector_store():
             "provenance_source_type": "snowball_current_state",
         }
     ]
+
+def test_get_knowledge_document_delegates_to_vector_store():
+    expected_document = {
+        "document_id": "snowball-current-state",
+        "filename": "CURRENT_STATE.md",
+        "chunk_count": 2,
+        "authority": "current_reference",
+        "provenance_source_type": "snowball_current_state",
+        "chunks": [
+            {
+                "chunk_index": 0,
+                "text": "First Snowball chunk.",
+                "start_char": 0,
+                "end_char": 21,
+            },
+            {
+                "chunk_index": 1,
+                "text": "Second Snowball chunk.",
+                "start_char": 22,
+                "end_char": 44,
+            },
+        ],
+    }
+
+    class FakeVectorStore:
+        def get_document(self, document_id):
+            assert document_id == "snowball-current-state"
+            return expected_document
+
+    manager = MemoryManager(
+        vector_store=FakeVectorStore()
+    )
+
+    document = manager.get_knowledge_document(
+        "snowball-current-state"
+    )
+
+    assert document == expected_document

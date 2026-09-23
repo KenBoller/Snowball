@@ -50,6 +50,12 @@ class MemoryManager:
     def list_knowledge_documents(self) -> list[dict]:
         return self.vector_store.list_documents()
 
+    def get_knowledge_document(
+        self,
+        document_id: str,
+    ) -> dict | None:
+        return self.vector_store.get_document(document_id)
+
     def get_knowledge_context(
         self,
         question: str,

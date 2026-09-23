@@ -267,3 +267,66 @@ def test_list_documents_handles_missing_optional_metadata(tmp_path):
             "provenance_source_type": None,
         }
     ]
+
+def test_get_document_returns_metadata_and_chunks(tmp_path):
+    store = VectorStore(tmp_path / "vectors")
+
+    store.add_chunks(
+        chunks=[
+            {
+                "chunk_index": 0,
+                "text": "First Snowball chunk.",
+                "start_char": 0,
+                "end_char": 21,
+            },
+            {
+                "chunk_index": 1,
+                "text": "Second Snowball chunk.",
+                "start_char": 22,
+                "end_char": 44,
+            },
+        ],
+        embeddings=[
+            [1.0, 0.0, 0.0],
+            [0.9, 0.1, 0.0],
+        ],
+        document_id="snowball-current-state",
+        filename="CURRENT_STATE.md",
+        metadata={
+            "authority": "current_reference",
+            "provenance_source_type": "snowball_current_state",
+        },
+    )
+
+    document = store.get_document(
+        "snowball-current-state"
+    )
+
+    assert document == {
+        "document_id": "snowball-current-state",
+        "filename": "CURRENT_STATE.md",
+        "chunk_count": 2,
+        "authority": "current_reference",
+        "provenance_source_type": "snowball_current_state",
+        "chunks": [
+            {
+                "chunk_index": 0,
+                "text": "First Snowball chunk.",
+                "start_char": 0,
+                "end_char": 21,
+            },
+            {
+                "chunk_index": 1,
+                "text": "Second Snowball chunk.",
+                "start_char": 22,
+                "end_char": 44,
+            },
+        ],
+    }
+
+def test_get_document_returns_none_when_missing(tmp_path):
+    store = VectorStore(tmp_path / "vectors")
+
+    document = store.get_document("does-not-exist")
+
+    assert document is None

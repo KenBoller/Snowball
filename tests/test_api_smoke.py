@@ -112,3 +112,85 @@ def test_knowledge_endpoint(monkeypatch):
             "provenance_source_type": "snowball_project_document",
         },
     ]
+
+def test_get_knowledge_document_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    expected_document = {
+        "document_id": "snowball-current-state",
+        "filename": "CURRENT_STATE.md",
+        "chunk_count": 2,
+        "authority": "current_reference",
+        "provenance_source_type": "snowball_current_state",
+        "chunks": [
+            {
+                "chunk_index": 0,
+                "text": "First Snowball chunk.",
+                "start_char": 0,
+                "end_char": 21,
+            },
+            {
+                "chunk_index": 1,
+                "text": "Second Snowball chunk.",
+                "start_char": 22,
+                "end_char": 44,
+            },
+        ],
+    }
+
+    class FakeMemoryManager:
+        def get_knowledge_document(self, document_id):
+            assert document_id == "snowball-current-state"
+            return expected_document
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    response = client.get(
+        "/knowledge/snowball-current-state"
+    )
+
+    assert response.status_code == 200
+    assert response.json() == expected_document
+
+def test_get_knowledge_document_endpoint_returns_404_when_missing(
+    monkeypatch,
+):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    class FakeMemoryManager:
+        def get_knowledge_document(self, document_id):
+            assert document_id == "does-not-exist"
+            return None
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    response = client.get(
+        "/knowledge/does-not-exist"
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Knowledge document not found."
+    }

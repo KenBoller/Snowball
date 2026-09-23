@@ -141,7 +141,7 @@ class VectorStore:
 
     def count(self) -> int:
         return self.collection.count()
-    
+
     def list_documents(self) -> list[dict]:
         results = self.collection.get(
             include=["metadatas"]
@@ -174,6 +174,56 @@ class VectorStore:
             documents[document_id]["chunk_count"] += 1
 
         return list(documents.values())
+
+    def get_document(self, document_id: str) -> dict | None:
+        if not document_id.strip():
+            raise ValueError("document_id cannot be empty.")
+
+        results = self.collection.get(
+            where={"document_id": document_id},
+            include=["documents", "metadatas"],
+        )
+
+        documents = results.get("documents") or []
+        metadatas = results.get("metadatas") or []
+
+        if not documents:
+            return None
+
+        chunks = []
+
+        for text, metadata in zip(documents, metadatas):
+            metadata = metadata or {}
+
+            chunks.append(
+                {
+                    "chunk_index": metadata.get("chunk_index"),
+                    "text": text,
+                    "start_char": metadata.get("start_char"),
+                    "end_char": metadata.get("end_char"),
+                }
+            )
+
+        chunks.sort(
+            key=lambda chunk: (
+                chunk["chunk_index"]
+                if chunk["chunk_index"] is not None
+                else float("inf")
+            )
+        )
+
+        metadata = metadatas[0] or {}
+
+        return {
+            "document_id": document_id,
+            "filename": metadata.get("filename"),
+            "chunk_count": len(chunks),
+            "authority": metadata.get("authority"),
+            "provenance_source_type": metadata.get(
+                "provenance_source_type"
+            ),
+            "chunks": chunks,
+        }
 
     def delete_document(self, document_id: str) -> None:
         if not document_id.strip():

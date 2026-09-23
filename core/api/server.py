@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from core.api.chat_api import get_agent, send_message
@@ -54,6 +54,21 @@ def knowledge() -> dict[str, object]:
             for document in documents
         ),
     }
+
+@app.get("/knowledge/{document_id}")
+def knowledge_document(document_id: str) -> dict:
+    agent = get_agent()
+    document = agent.memory_manager.get_knowledge_document(
+        document_id
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Knowledge document not found.",
+        )
+
+    return document
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
