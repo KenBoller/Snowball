@@ -36,6 +36,8 @@ def status() -> dict[str, object]:
         "capabilities": [
             "chat",
             "persistent_memory",
+            "semantic_knowledge",
+            "knowledge_provenance",
         ],
     }
 

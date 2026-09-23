@@ -25,6 +25,8 @@ def test_status_endpoint():
     assert data["status"] == "ok"
     assert "chat" in data["capabilities"]
     assert "persistent_memory" in data["capabilities"]
+    assert "semantic_knowledge" in data["capabilities"]
+    assert "knowledge_provenance" in data["capabilities"]
 
 
 def test_chat_endpoint_contract(monkeypatch):
