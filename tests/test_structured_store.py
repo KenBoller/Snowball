@@ -676,3 +676,54 @@ def test_get_current_relationships_returns_empty_list_when_none_exist(
     store.close()
 
     assert current == []
+
+def test_find_entities_by_name(tmp_path):
+    database_path = tmp_path / "structured_memory.db"
+    store = StructuredMemoryStore(database_path)
+
+    kraken = Entity(
+        entity_id="device:kraken",
+        entity_type="device",
+        name="Kraken",
+    )
+
+    ferris = Entity(
+        entity_id="device:ferris",
+        entity_type="device",
+        name="Ferris",
+    )
+
+    store.save_entity(kraken)
+    store.save_entity(ferris)
+
+    assert store.find_entities_by_name("Kraken") == [kraken]
+    assert store.find_entities_by_name("kraken") == [kraken]
+    assert store.find_entities_by_name("Unknown") == []
+
+    store.close()
+
+def test_list_entities(tmp_path):
+    store = StructuredMemoryStore(
+        tmp_path / "structured_memory.db"
+    )
+
+    kraken = Entity(
+        entity_id="device:kraken",
+        entity_type="device",
+        name="Kraken",
+    )
+    ferris = Entity(
+        entity_id="device:ferris",
+        entity_type="device",
+        name="Ferris",
+    )
+
+    store.save_entity(kraken)
+    store.save_entity(ferris)
+
+    assert store.list_entities() == [
+        ferris,
+        kraken,
+    ]
+
+    store.close()

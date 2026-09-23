@@ -15,6 +15,8 @@ from core.memory.semantic import (
 from core.memory.structured import Entity, Fact, Relationship
 from core.memory.structured_store import StructuredMemoryStore
 
+import re
+
 class MemoryManager:
     """
     Coordinates Snowball's long-term memory and knowledge systems.
@@ -86,6 +88,12 @@ class MemoryManager:
         *,
         result_count: int = 5,
     ) -> str:
+        if not question.strip():
+            raise ValueError("Question cannot be empty.")
+
+        if self.vector_store is None:
+            return ""
+
         return build_knowledge_context(
             question,
             vector_store=self.vector_store,
@@ -142,6 +150,7 @@ class MemoryManager:
                 question,
                 result_count=knowledge_result_count,
             ),
+            "structured": self.get_entity_context(question),
         }
 
     def get_episodic_entries(
@@ -347,3 +356,76 @@ class MemoryManager:
         return self.structured_store.get_relationship(
             relationship_id
         )
+
+    def find_entities_by_name(
+        self,
+        name: str,
+    ) -> list[Entity]:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        return self.structured_store.find_entities_by_name(name)
+
+    def list_entities(self) -> list[Entity]:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        return self.structured_store.list_entities()
+
+    def get_entity_context(
+        self,
+        question: str,
+    ) -> str:
+        if not question.strip():
+            raise ValueError("Question cannot be empty.")
+
+        if self.structured_store is None:
+            return ""
+
+        matched_entities = []
+
+        for entity in self.list_entities():
+            pattern = rf"(?<!\w){re.escape(entity.name)}(?!\w)"
+
+            if re.search(
+                pattern,
+                question,
+                flags=re.IGNORECASE,
+            ):
+                matched_entities.append(entity)
+
+        if not matched_entities:
+            return ""
+
+        parts = []
+
+        for entity in matched_entities:
+            facts = self.get_current_facts(entity.entity_id)
+
+            if not facts:
+                continue
+
+            lines = [
+                "[STRUCTURED ENTITY]",
+                f"ENTITY: {entity.name}",
+                f"ENTITY_ID: {entity.entity_id}",
+                f"ENTITY_TYPE: {entity.entity_type}",
+            ]
+
+            for fact in facts:
+                lines.extend(
+                    [
+                        f"FACT: {fact.predicate} = {fact.value}",
+                        f"SOURCE_TYPE: {fact.source.source_type}",
+                        f"AUTHORITY: {fact.source.authority}",
+                        f"LEARNED_AT: {fact.learned_at}",
+                    ]
+                )
+
+            parts.append("\n".join(lines))
+
+        return "\n\n".join(parts)

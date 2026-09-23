@@ -130,6 +130,7 @@ class StructuredMemoryStore:
 
         if row is None:
             return None
+            return self._entity_from_row(row)
 
         metadata = (
             json.loads(row[3])
@@ -661,3 +662,66 @@ class StructuredMemoryStore:
             supersedes=row[7],
             metadata=metadata,
         )
+
+    def find_entities_by_name(
+        self,
+        name: str,
+    ) -> list[Entity]:
+        rows = self.connection.execute(
+            """
+            SELECT
+                entity_id,
+                entity_type,
+                name,
+                metadata
+            FROM entities
+            WHERE LOWER(name) = LOWER(?)
+            ORDER BY entity_id
+            """,
+            (name,),
+        ).fetchall()
+
+        return [
+            Entity(
+                entity_id=row[0],
+                entity_type=row[1],
+                name=row[2],
+                metadata=(
+                    json.loads(row[3])
+                    if row[3] is not None
+                    else None
+                ),
+            )
+            for row in rows
+        ]
+
+    @staticmethod
+    def _entity_from_row(row) -> Entity:
+        return Entity(
+            entity_id=row[0],
+            entity_type=row[1],
+            name=row[2],
+            metadata=(
+                json.loads(row[3])
+                if row[3] is not None
+                else None
+            ),
+        )
+
+    def list_entities(self) -> list[Entity]:
+        rows = self.connection.execute(
+            """
+            SELECT
+                entity_id,
+                entity_type,
+                name,
+                metadata
+            FROM entities
+            ORDER BY entity_id
+            """
+        ).fetchall()
+
+        return [
+            self._entity_from_row(row)
+            for row in rows
+        ]

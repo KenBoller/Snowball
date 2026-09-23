@@ -782,6 +782,10 @@ class SnowballAI:
                     context.get("knowledge", "")
                 ).strip()
 
+                structured_context = str(
+                    context.get("structured", "")
+                ).strip()
+
                 context_parts = []
 
                 if episodic_context:
@@ -789,6 +793,9 @@ class SnowballAI:
 
                 if knowledge_context:
                     context_parts.append(knowledge_context)
+
+                if structured_context:
+                    context_parts.append(structured_context)
 
                 if context_parts:
                     long_term_memory = (
