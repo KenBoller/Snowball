@@ -65,7 +65,7 @@ def test_reingestion_with_empty_document_removes_old_chunks(
     assert result["vector_ids"] == []
     assert store.count() == 0
 
-    
+
 def test_ingest_markdown_file(tmp_path: Path):
     document = tmp_path / "snowball.md"
     document.write_text(
@@ -364,3 +364,69 @@ def test_extract_text_from_docx_preserves_paragraph_and_table_order(tmp_path: Pa
     assert text.index("Before table") < text.index("Name | Value")
     assert text.index("Name | Value") < text.index("Snowball | AI/OS")
     assert text.index("Snowball | AI/OS") < text.index("After table")
+
+
+def test_failed_reingestion_preserves_existing_document(
+    tmp_path: Path,
+    monkeypatch,
+):
+    document = tmp_path / "failure-safe.txt"
+    store = VectorStore(tmp_path / "vectors")
+
+    # Initial successful ingestion.
+    monkeypatch.setattr(
+        "core.knowledge.ingestion.create_embeddings",
+        lambda texts: [[0.1, 0.2, 0.3] for _ in texts],
+    )
+
+    document.write_text(
+        "Snowball's existing knowledge.",
+        encoding="utf-8",
+    )
+
+    ingest_into_vector_store(
+        document,
+        store,
+        document_id="failure-safe-document",
+    )
+
+    assert store.count() == 1
+
+    # Simulate an updated document.
+    document.write_text(
+        "Snowball's replacement knowledge.",
+        encoding="utf-8",
+    )
+
+    # Simulate the embedding engine failing before replacement.
+    def fail_embeddings(texts):
+        raise RuntimeError("Embedding service unavailable")
+
+    monkeypatch.setattr(
+        "core.knowledge.ingestion.create_embeddings",
+        fail_embeddings,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Embedding service unavailable",
+    ):
+        ingest_into_vector_store(
+            document,
+            store,
+            document_id="failure-safe-document",
+        )
+
+    # The previously stored knowledge must survive.
+    assert store.count() == 1
+
+    stored = store.collection.get(
+        where={"document_id": "failure-safe-document"}
+    )
+
+    assert stored["ids"] == [
+        "failure-safe-document_chunk_0"
+    ]
+    assert stored["documents"] == [
+        "Snowball's existing knowledge."
+    ]

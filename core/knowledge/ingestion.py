@@ -167,9 +167,9 @@ def ingest_into_vector_store(
     if document_id is None:
         document_id = uuid4().hex
 
-    vector_store.delete_document(document_id)
-
     if not chunks:
+        vector_store.delete_document(document_id)
+
         return {
             "document_id": document_id,
             "filename": document["filename"],
@@ -181,6 +181,8 @@ def ingest_into_vector_store(
     embeddings = create_embeddings(
         [chunk["text"] for chunk in chunks]
     )
+
+    vector_store.delete_document(document_id)
 
     document_metadata = {
         "source_type": document["source_type"],
