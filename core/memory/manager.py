@@ -47,6 +47,9 @@ class MemoryManager:
             overlap=overlap,
         )
 
+    def list_knowledge_documents(self) -> list[dict]:
+        return self.vector_store.list_documents()
+
     def get_knowledge_context(
         self,
         question: str,

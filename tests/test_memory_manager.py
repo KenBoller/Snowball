@@ -40,7 +40,6 @@ def test_memory_manager_ingests_and_retrieves_knowledge(
     assert "Kraken" in context
     assert "snowball-facts.txt" in context
 
-
 def test_memory_manager_empty_knowledge_returns_empty_context(
     tmp_path: Path,
 ):
@@ -80,7 +79,6 @@ def test_memory_manager_builds_unified_context(
     assert "knowledge" in context
     assert "Kraken" in context["knowledge"]
 
-
 def test_memory_manager_unified_context_without_knowledge(
     tmp_path: Path,
 ):
@@ -102,7 +100,6 @@ class FakeEpisodicMemory:
 
     def retrieve(self, query):
         return self.memory
-
 
 def test_memory_manager_includes_episodic_memory(
     tmp_path: Path,
@@ -128,7 +125,6 @@ def test_memory_manager_includes_episodic_memory(
     assert "Kraken" in context["episodic"]
     assert "My Neptune 4 printer is named Kraken." in context["episodic"]
 
-
 def test_memory_manager_without_episodic_memory_returns_empty(
     tmp_path: Path,
 ):
@@ -140,7 +136,6 @@ def test_memory_manager_without_episodic_memory_returns_empty(
     )
 
     assert context == ""
-
 
 def test_memory_manager_combines_episodic_and_knowledge(
     tmp_path: Path,
@@ -210,7 +205,6 @@ def test_structured_context_preserves_user_provenance(
     assert entry.source.authority == "user"
     assert entry.source.source_id == "kraken-memory"
 
-
 def test_structured_context_preserves_knowledge_provenance(
     tmp_path: Path,
 ):
@@ -241,7 +235,6 @@ def test_structured_context_preserves_knowledge_provenance(
     assert entry.source.source_type == "knowledge_document"
     assert entry.source.authority == "reference"
     assert entry.source.source_id == "printer-notes"
-
 
 def test_structured_context_keeps_memory_sources_separate(
     tmp_path: Path,
@@ -282,3 +275,32 @@ def test_structured_context_keeps_memory_sources_separate(
 
     assert context["episodic"][0].source.authority == "user"
     assert context["knowledge"][0].source.authority == "reference"
+
+def test_list_knowledge_documents_delegates_to_vector_store():
+    class FakeVectorStore:
+        def list_documents(self):
+            return [
+                {
+                    "document_id": "snowball-current-state",
+                    "filename": "CURRENT_STATE.md",
+                    "chunk_count": 19,
+                    "authority": "current_reference",
+                    "provenance_source_type": "snowball_current_state",
+                }
+            ]
+
+    manager = MemoryManager(
+        vector_store=FakeVectorStore()
+    )
+
+    documents = manager.list_knowledge_documents()
+
+    assert documents == [
+        {
+            "document_id": "snowball-current-state",
+            "filename": "CURRENT_STATE.md",
+            "chunk_count": 19,
+            "authority": "current_reference",
+            "provenance_source_type": "snowball_current_state",
+        }
+    ]

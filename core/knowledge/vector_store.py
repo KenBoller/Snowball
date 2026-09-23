@@ -142,6 +142,39 @@ class VectorStore:
     def count(self) -> int:
         return self.collection.count()
     
+    def list_documents(self) -> list[dict]:
+        results = self.collection.get(
+            include=["metadatas"]
+        )
+
+        metadatas = results.get("metadatas") or []
+
+        documents: dict[str, dict] = {}
+
+        for metadata in metadatas:
+            if not metadata:
+                continue
+
+            document_id = metadata.get("document_id")
+
+            if not document_id:
+                continue
+
+            if document_id not in documents:
+                documents[document_id] = {
+                    "document_id": document_id,
+                    "filename": metadata.get("filename"),
+                    "chunk_count": 0,
+                    "authority": metadata.get("authority"),
+                    "provenance_source_type": metadata.get(
+                        "provenance_source_type"
+                    ),
+                }
+
+            documents[document_id]["chunk_count"] += 1
+
+        return list(documents.values())
+
     def delete_document(self, document_id: str) -> None:
         if not document_id.strip():
             raise ValueError("document_id cannot be empty.")

@@ -51,3 +51,64 @@ def test_chat_endpoint_contract(monkeypatch):
     assert response.json() == {
         "response": "Echo: hello Snowball"
     }
+
+
+def test_knowledge_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    class FakeMemoryManager:
+        def list_knowledge_documents(self):
+            return [
+                {
+                    "document_id": "snowball-current-state",
+                    "filename": "CURRENT_STATE.md",
+                    "chunk_count": 19,
+                    "authority": "current_reference",
+                    "provenance_source_type": "snowball_current_state",
+                },
+                {
+                    "document_id": "snowball-archive",
+                    "filename": "archive.docx",
+                    "chunk_count": 45,
+                    "authority": "historical_reference",
+                    "provenance_source_type": "snowball_project_document",
+                },
+            ]
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+    response = client.get("/knowledge")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["document_count"] == 2
+    assert body["chunk_count"] == 64
+
+    assert body["documents"] == [
+        {
+            "document_id": "snowball-current-state",
+            "filename": "CURRENT_STATE.md",
+            "chunk_count": 19,
+            "authority": "current_reference",
+            "provenance_source_type": "snowball_current_state",
+        },
+        {
+            "document_id": "snowball-archive",
+            "filename": "archive.docx",
+            "chunk_count": 45,
+            "authority": "historical_reference",
+            "provenance_source_type": "snowball_project_document",
+        },
+    ]

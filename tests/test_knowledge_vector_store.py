@@ -163,3 +163,107 @@ def test_delete_document_removes_only_matching_document(tmp_path):
     )
 
     assert remaining["ids"] == ["beta_chunk_0"]
+
+
+def test_list_documents_groups_chunks_by_document(tmp_path):
+    store = VectorStore(tmp_path / "vectors")
+
+    store.add_chunks(
+        chunks=[
+            {
+                "chunk_index": 0,
+                "text": "First Snowball chunk.",
+                "start_char": 0,
+                "end_char": 21,
+            },
+            {
+                "chunk_index": 1,
+                "text": "Second Snowball chunk.",
+                "start_char": 22,
+                "end_char": 44,
+            },
+        ],
+        embeddings=[
+            [1.0, 0.0, 0.0],
+            [0.9, 0.1, 0.0],
+        ],
+        document_id="snowball-current-state",
+        filename="CURRENT_STATE.md",
+        metadata={
+            "authority": "current_reference",
+            "provenance_source_type": "snowball_current_state",
+        },
+    )
+
+    store.add_chunks(
+        chunks=[
+            {
+                "chunk_index": 0,
+                "text": "Historical Snowball chunk.",
+                "start_char": 0,
+                "end_char": 26,
+            },
+        ],
+        embeddings=[
+            [0.0, 1.0, 0.0],
+        ],
+        document_id="snowball-archive",
+        filename="archive.docx",
+        metadata={
+            "authority": "historical_reference",
+            "provenance_source_type": "snowball_project_document",
+        },
+    )
+
+    documents = store.list_documents()
+
+    assert len(documents) == 2
+
+    by_id = {
+        document["document_id"]: document
+        for document in documents
+    }
+
+    assert by_id["snowball-current-state"]["filename"] == "CURRENT_STATE.md"
+    assert by_id["snowball-current-state"]["chunk_count"] == 2
+    assert by_id["snowball-current-state"]["authority"] == "current_reference"
+    assert (
+        by_id["snowball-current-state"]["provenance_source_type"]
+        == "snowball_current_state"
+    )
+
+    assert by_id["snowball-archive"]["filename"] == "archive.docx"
+    assert by_id["snowball-archive"]["chunk_count"] == 1
+    assert by_id["snowball-archive"]["authority"] == "historical_reference"
+
+
+def test_list_documents_handles_missing_optional_metadata(tmp_path):
+    store = VectorStore(tmp_path / "vectors")
+
+    store.add_chunks(
+        chunks=[
+            {
+                "chunk_index": 0,
+                "text": "Minimal knowledge chunk.",
+                "start_char": 0,
+                "end_char": 24,
+            },
+        ],
+        embeddings=[
+            [1.0, 0.0, 0.0],
+        ],
+        document_id="minimal-document",
+        filename="minimal.txt",
+    )
+
+    documents = store.list_documents()
+
+    assert documents == [
+        {
+            "document_id": "minimal-document",
+            "filename": "minimal.txt",
+            "chunk_count": 1,
+            "authority": None,
+            "provenance_source_type": None,
+        }
+    ]
