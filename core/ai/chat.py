@@ -18,6 +18,7 @@ from .router import CommandRouter, KVMemory, ToolResult  # requires S:/Snowball/
 from core.knowledge.vector_store import VectorStore
 from core.memory.episodic import LegacyMemoryAdapter
 from core.memory.manager import MemoryManager
+from core.memory.structured_store import StructuredMemoryStore
 
 # ----------------------------- Optional imports (graceful) -----------------------------
 try:
@@ -178,7 +179,15 @@ class SnowballAI:
                 )
 
                 vector_store = VectorStore(vector_path)
+                structured_memory_path = os.path.join(
+                    self._storage_dir,
+                    "memory",
+                    "structured_memory.db",
+                )
 
+                structured_store = StructuredMemoryStore(
+                    structured_memory_path
+                )
                 episodic_memory = LegacyMemoryAdapter(
                     self.memory
                 )
@@ -186,6 +195,7 @@ class SnowballAI:
                 self.memory_manager = MemoryManager(
                     vector_store=vector_store,
                     episodic_memory=episodic_memory,
+                    structured_store=structured_store,
                 )
 
                 self._log(
