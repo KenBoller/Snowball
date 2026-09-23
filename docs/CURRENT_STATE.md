@@ -280,9 +280,12 @@ capabilities:
 
 - `chat`
 - `persistent_memory`
+- `semantic_knowledge`
+- `knowledge_provenance`
 
-This capability list does not yet describe every capability implemented
-elsewhere in the current Snowball codebase.
+This capability list describes capabilities exposed by the Snowball service
+itself. External integrations such as n8n and the browser/mobile client are
+not represented as API-service capabilities.
 
 ### `POST /chat`
 
