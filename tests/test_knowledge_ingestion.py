@@ -247,3 +247,29 @@ def test_extract_text_from_docx_requires_existing_file(tmp_path: Path):
 
     with pytest.raises(FileNotFoundError):
         extract_text_from_docx(missing)
+
+
+def test_extract_text_from_docx_preserves_paragraph_and_table_order(tmp_path: Path):
+    path = tmp_path / "ordered.docx"
+
+    document = Document()
+    document.add_paragraph("Before table")
+
+    table = document.add_table(rows=2, cols=2)
+    table.cell(0, 0).text = "Name"
+    table.cell(0, 1).text = "Value"
+    table.cell(1, 0).text = "Snowball"
+    table.cell(1, 1).text = "AI/OS"
+
+    document.add_paragraph("After table")
+    document.save(path)
+
+    result = extract_text_from_docx(path)
+    text = result["full_text"]
+
+    assert "Name | Value" in text
+    assert "Snowball | AI/OS" in text
+
+    assert text.index("Before table") < text.index("Name | Value")
+    assert text.index("Name | Value") < text.index("Snowball | AI/OS")
+    assert text.index("Snowball | AI/OS") < text.index("After table")

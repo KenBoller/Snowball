@@ -11,6 +11,9 @@ from core.knowledge.embeddings import create_embeddings
 from core.knowledge.vector_store import VectorStore
 
 from docx import Document
+from docx.table import Table
+from docx.text.paragraph import Paragraph
+
 
 TEXT_SUFFIXES = {
     ".txt",
@@ -200,6 +203,17 @@ def ingest_into_vector_store(
     }
 
 
+def _iter_docx_blocks(document):
+    """
+    Yield paragraphs and tables from a DOCX in document order.
+    """
+    for child in document.element.body.iterchildren():
+        if child.tag.endswith("}p"):
+            yield Paragraph(child, document)
+        elif child.tag.endswith("}tbl"):
+            yield Table(child, document)
+
+
 def extract_text_from_docx(file_path: str | Path) -> dict:
     path = Path(file_path)
 
@@ -210,14 +224,26 @@ def extract_text_from_docx(file_path: str | Path) -> dict:
         raise ValueError("File must be a DOCX.")
 
     document = Document(path)
+    text_blocks = []
 
-    paragraphs = [
-        paragraph.text
-        for paragraph in document.paragraphs
-        if paragraph.text.strip()
-    ]
+    for block in _iter_docx_blocks(document):
+        if isinstance(block, Paragraph):
+            text = block.text.strip()
 
-    full_text = "\n\n".join(paragraphs)
+            if text:
+                text_blocks.append(text)
+
+        elif isinstance(block, Table):
+            for row in block.rows:
+                cells = [
+                    cell.text.strip()
+                    for cell in row.cells
+                ]
+
+                if any(cells):
+                    text_blocks.append(" | ".join(cells))
+
+    full_text = "\n\n".join(text_blocks)
 
     return {
         "source_type": "docx",
