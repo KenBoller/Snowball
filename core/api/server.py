@@ -70,6 +70,25 @@ def knowledge_document(document_id: str) -> dict:
 
     return document
 
+@app.delete("/knowledge/{document_id}")
+def delete_knowledge_document(document_id: str) -> dict:
+    agent = get_agent()
+
+    deleted = agent.memory_manager.delete_knowledge_document(
+        document_id
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Knowledge document not found.",
+        )
+
+    return {
+        "document_id": document_id,
+        "deleted": True,
+    }
+
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
     response = send_message(request.message)

@@ -330,3 +330,33 @@ def test_get_document_returns_none_when_missing(tmp_path):
     document = store.get_document("does-not-exist")
 
     assert document is None
+
+def test_delete_document_reports_whether_document_existed(tmp_path):
+    store = VectorStore(tmp_path / "vectors")
+
+    store.add_chunks(
+        chunks=[
+            {
+                "chunk_index": 0,
+                "text": "Temporary Snowball knowledge.",
+                "start_char": 0,
+                "end_char": 29,
+            },
+        ],
+        embeddings=[
+            [1.0, 0.0, 0.0],
+        ],
+        document_id="temporary-document",
+        filename="temporary.txt",
+    )
+
+    deleted = store.delete_document(
+        "temporary-document"
+    )
+
+    missing = store.delete_document(
+        "does-not-exist"
+    )
+
+    assert deleted is True
+    assert missing is False

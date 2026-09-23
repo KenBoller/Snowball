@@ -56,6 +56,12 @@ class MemoryManager:
     ) -> dict | None:
         return self.vector_store.get_document(document_id)
 
+    def delete_knowledge_document(
+        self,
+        document_id: str,
+    ) -> bool:
+        return self.vector_store.delete_document(document_id)
+
     def get_knowledge_context(
         self,
         question: str,

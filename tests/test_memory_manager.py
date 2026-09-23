@@ -342,3 +342,19 @@ def test_get_knowledge_document_delegates_to_vector_store():
     )
 
     assert document == expected_document
+
+def test_delete_knowledge_document_delegates_to_vector_store():
+    class FakeVectorStore:
+        def delete_document(self, document_id):
+            assert document_id == "temporary-document"
+            return True
+
+    manager = MemoryManager(
+        vector_store=FakeVectorStore()
+    )
+
+    deleted = manager.delete_knowledge_document(
+        "temporary-document"
+    )
+
+    assert deleted is True

@@ -225,10 +225,20 @@ class VectorStore:
             "chunks": chunks,
         }
 
-    def delete_document(self, document_id: str) -> None:
+    def delete_document(self, document_id: str) -> bool:
         if not document_id.strip():
             raise ValueError("document_id cannot be empty.")
+
+        existing = self.collection.get(
+            where={"document_id": document_id},
+            include=[],
+        )
+
+        if not existing.get("ids"):
+            return False
 
         self.collection.delete(
             where={"document_id": document_id}
         )
+
+        return True

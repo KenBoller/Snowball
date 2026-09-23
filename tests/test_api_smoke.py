@@ -194,3 +194,66 @@ def test_get_knowledge_document_endpoint_returns_404_when_missing(
     assert response.json() == {
         "detail": "Knowledge document not found."
     }
+
+def test_delete_knowledge_document_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    class FakeMemoryManager:
+        def delete_knowledge_document(self, document_id):
+            assert document_id == "temporary-document"
+            return True
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    response = client.delete(
+        "/knowledge/temporary-document"
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "document_id": "temporary-document",
+        "deleted": True,
+    }
+
+def test_delete_knowledge_document_endpoint_returns_404_when_missing(
+    monkeypatch,
+):
+    from fastapi.testclient import TestClient
+
+    import core.api.server as server
+
+    class FakeMemoryManager:
+        def delete_knowledge_document(self, document_id):
+            assert document_id == "does-not-exist"
+            return False
+
+    class FakeAgent:
+        memory_manager = FakeMemoryManager()
+
+    monkeypatch.setattr(
+        server,
+        "get_agent",
+        lambda: FakeAgent(),
+    )
+
+    client = TestClient(server.app)
+
+    response = client.delete(
+        "/knowledge/does-not-exist"
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Knowledge document not found."
+    }
