@@ -12,6 +12,8 @@ from core.memory.semantic import (
     knowledge_source,
     user_statement_source,
 )
+from core.memory.structured import Entity, Fact, Relationship
+from core.memory.structured_store import StructuredMemoryStore
 
 class MemoryManager:
     """
@@ -25,9 +27,11 @@ class MemoryManager:
         self,
         vector_store: VectorStore,
         episodic_memory: LegacyMemoryAdapter | None = None,
+        structured_store: StructuredMemoryStore | None = None,
     ) -> None:
         self.vector_store = vector_store
         self.episodic_memory = episodic_memory
+        self.structured_store = structured_store
 
     def ingest_document(
         self,
@@ -139,7 +143,7 @@ class MemoryManager:
                 result_count=knowledge_result_count,
             ),
         }
-    
+
     def get_episodic_entries(
         self,
         question: str,
@@ -217,3 +221,129 @@ class MemoryManager:
             "episodic": episodic,
             "knowledge": knowledge_results,
         }
+
+    def save_entity(self, entity: Entity) -> None:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        self.structured_store.save_entity(entity)
+
+    def get_entity(
+        self,
+        entity_id: str,
+    ) -> Entity | None:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        return self.structured_store.get_entity(entity_id)
+
+    def save_fact(self, fact: Fact) -> None:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        self.structured_store.save_fact(fact)
+
+    def get_current_facts(
+        self,
+        subject_id: str,
+        *,
+        predicate: str | None = None,
+    ) -> list[Fact]:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        return self.structured_store.get_current_facts(
+            subject_id,
+            predicate=predicate,
+        )
+
+    def save_relationship(
+        self,
+        relationship: Relationship,
+    ) -> None:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        self.structured_store.save_relationship(
+            relationship
+        )
+
+    def get_current_relationships(
+        self,
+        source_entity_id: str,
+        *,
+        relationship: str | None = None,
+    ) -> list[Relationship]:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        return self.structured_store.get_current_relationships(
+            source_entity_id,
+            relationship=relationship,
+        )
+
+    def supersede_fact(
+        self,
+        old_fact_id: str,
+        new_fact: Fact,
+    ) -> None:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        self.structured_store.supersede_fact(
+            old_fact_id,
+            new_fact,
+        )
+
+    def supersede_relationship(
+        self,
+        old_relationship_id: str,
+        new_relationship: Relationship,
+    ) -> None:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        self.structured_store.supersede_relationship(
+            old_relationship_id,
+            new_relationship,
+        )
+
+    def get_fact(
+        self,
+        fact_id: str,
+    ) -> Fact | None:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        return self.structured_store.get_fact(fact_id)
+
+    def get_relationship(
+        self,
+        relationship_id: str,
+    ) -> Relationship | None:
+        if self.structured_store is None:
+            raise RuntimeError(
+                "Structured memory store is not configured"
+            )
+
+        return self.structured_store.get_relationship(
+            relationship_id
+        )
