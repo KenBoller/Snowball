@@ -12,7 +12,10 @@ class DummyResp:
     def json(self):
         return self._payload
 
-def test_chat_calls_ollama_and_returns_content(monkeypatch):
+def test_chat_calls_ollama_and_returns_content(
+    monkeypatch,
+    tmp_path,
+):
     # ensure we don't use memory/DM for this test
     monkeypatch.setenv("SNOWBALL_USE_MEMORY", "0")
     monkeypatch.setenv("SNOWBALL_USE_DM", "0")
@@ -27,11 +30,17 @@ def test_chat_calls_ollama_and_returns_content(monkeypatch):
     import core.ai.chat as chatmod
     monkeypatch.setattr(chatmod.requests, "post", fake_post)
 
-    ai = chatmod.SnowballAI(logger=None)
+    ai = chatmod.SnowballAI(
+        logger=None,
+        storage_dir=str(tmp_path / "storage"),
+    )
     out = ai.chat("hello")
     assert out.strip() == "hello from fake ollama"
 
-def test_chat_fallback_when_provider_errors(monkeypatch):
+def test_chat_fallback_when_provider_errors(
+    monkeypatch,
+    tmp_path,
+):
     monkeypatch.setenv("SNOWBALL_USE_MEMORY", "0")
     monkeypatch.setenv("SNOWBALL_USE_DM", "0")
     monkeypatch.setenv("SNOWBALL_FANOUT", "0")
@@ -42,7 +51,10 @@ def test_chat_fallback_when_provider_errors(monkeypatch):
     import core.ai.chat as chatmod
     monkeypatch.setattr(chatmod.requests, "post", fake_post)
 
-    ai = chatmod.SnowballAI(logger=None)
+    ai = chatmod.SnowballAI(
+        logger=None,
+        storage_dir=str(tmp_path / "storage"),
+    )
     out = ai.chat("help me")
     assert isinstance(out, str)
     assert len(out) > 0

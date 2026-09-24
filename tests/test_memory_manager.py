@@ -92,6 +92,7 @@ def test_memory_manager_unified_context_without_knowledge(
     assert context == {
         "episodic": "",
         "knowledge": "",
+        "structured": "",
     }
 
 class FakeEpisodicMemory:
@@ -193,7 +194,7 @@ def test_structured_context_preserves_user_provenance(
         episodic_memory=episodic,
     )
 
-    context = manager.get_structured_context(
+    context = manager.get_memory_entries(
         "What is Kraken?"
     )
 
@@ -205,7 +206,7 @@ def test_structured_context_preserves_user_provenance(
     assert entry.source.authority == "user"
     assert entry.source.source_id == "kraken-memory"
 
-def test_structured_context_preserves_knowledge_provenance(
+def test_memory_entries_preserve_knowledge_provenance(
     tmp_path: Path,
 ):
     store = VectorStore(tmp_path / "vectors")
@@ -223,7 +224,7 @@ def test_structured_context_preserves_knowledge_provenance(
         document_id="printer-notes",
     )
 
-    context = manager.get_structured_context(
+    context = manager.get_memory_entries(
         "What machine is used for 3D printing?",
         knowledge_result_count=1,
     )
@@ -265,7 +266,7 @@ def test_structured_context_keeps_memory_sources_separate(
         document_id="printer-notes",
     )
 
-    context = manager.get_structured_context(
+    context = manager.get_memory_entries(
         "Tell me about my Neptune 4 printer.",
         knowledge_result_count=1,
     )

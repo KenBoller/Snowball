@@ -185,7 +185,7 @@ class MemoryManager:
             )
         ]
 
-    def get_structured_context(
+    def get_memory_entries(
         self,
         question: str,
         *,

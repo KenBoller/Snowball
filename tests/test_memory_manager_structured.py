@@ -360,7 +360,7 @@ def test_list_entities(tmp_path):
 
     store.close()
 
-def test_get_structured_context_for_named_entity(tmp_path):
+def test_get_entity_context_for_named_entity(tmp_path):
     store = StructuredMemoryStore(
         tmp_path / "structured_memory.db"
     )
