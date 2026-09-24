@@ -119,7 +119,7 @@ def validate_extraction_references(
                 "Unresolved relationship target reference: "
                 f"{relationship.target_reference}"
             )
-        
+
 
 def parse_memory_extraction(
     data: dict[str, Any],
