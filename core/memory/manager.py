@@ -405,8 +405,11 @@ class MemoryManager:
 
         for entity in matched_entities:
             facts = self.get_current_facts(entity.entity_id)
+            relationships = self.get_current_relationships(
+                entity.entity_id
+            )
 
-            if not facts:
+            if not facts and not relationships:
                 continue
 
             lines = [
@@ -423,6 +426,33 @@ class MemoryManager:
                         f"SOURCE_TYPE: {fact.source.source_type}",
                         f"AUTHORITY: {fact.source.authority}",
                         f"LEARNED_AT: {fact.learned_at}",
+                    ]
+                )
+
+            for relationship in relationships:
+                target_entity = self.get_entity(
+                    relationship.target_entity_id
+                )
+
+                target_name = (
+                    target_entity.name
+                    if target_entity is not None
+                    else relationship.target_entity_id
+                )
+
+                lines.extend(
+                    [
+                        (
+                            f"RELATIONSHIP: "
+                            f"{relationship.relationship} -> {target_name}"
+                        ),
+                        (
+                            f"TARGET_ENTITY_ID: "
+                            f"{relationship.target_entity_id}"
+                        ),
+                        f"SOURCE_TYPE: {relationship.source.source_type}",
+                        f"AUTHORITY: {relationship.source.authority}",
+                        f"LEARNED_AT: {relationship.learned_at}",
                     ]
                 )
 

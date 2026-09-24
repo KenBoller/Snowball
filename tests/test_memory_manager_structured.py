@@ -406,6 +406,59 @@ def test_get_entity_context_for_named_entity(tmp_path):
 
     store.close()
 
+def test_get_entity_context_includes_current_relationship(tmp_path):
+    store = StructuredMemoryStore(
+        tmp_path / "structured_memory.db"
+    )
+    manager = MemoryManager(
+        vector_store=None,
+        episodic_memory=None,
+        structured_store=store,
+    )
+
+    source = MemorySource(
+        memory_type="structured",
+        source_type="user_statement",
+        authority="user",
+    )
+
+    kraken = Entity(
+        entity_id="device:kraken",
+        entity_type="device",
+        name="Kraken",
+    )
+
+    flloyd = Entity(
+        entity_id="person:flloyd",
+        entity_type="person",
+        name="Flloyd",
+    )
+
+    relationship = Relationship(
+        relationship_id="relationship:kraken:owner:flloyd",
+        source_entity_id="device:kraken",
+        relationship="belongs_to",
+        target_entity_id="person:flloyd",
+        source=source,
+        learned_at="2026-09-24T11:00:00-05:00",
+    )
+
+    manager.save_entity(kraken)
+    manager.save_entity(flloyd)
+    manager.save_relationship(relationship)
+
+    context = manager.get_entity_context(
+        "Who does Kraken belong to?"
+    )
+
+    assert "Kraken" in context
+    assert "RELATIONSHIP: belongs_to -> Flloyd" in context
+    assert "TARGET_ENTITY_ID: person:flloyd" in context
+    assert "SOURCE_TYPE: user_statement" in context
+    assert "AUTHORITY: user" in context
+
+    store.close()
+
 def test_get_entity_context_uses_only_current_fact(tmp_path):
     store = StructuredMemoryStore(
         tmp_path / "structured_memory.db"
@@ -503,5 +556,127 @@ def test_unified_context_includes_structured_memory(tmp_path):
     assert "structured" in context
     assert "Aurora" in context["structured"]
     assert "Test Model X9" in context["structured"]
+
+    store.close()
+
+def test_get_entity_context_uses_only_current_relationship(tmp_path):
+    store = StructuredMemoryStore(
+        tmp_path / "structured_memory.db"
+    )
+    manager = MemoryManager(
+        vector_store=None,
+        episodic_memory=None,
+        structured_store=store,
+    )
+
+    source = MemorySource(
+        memory_type="structured",
+        source_type="user_statement",
+        authority="user",
+    )
+
+    kraken = Entity(
+        entity_id="device:kraken",
+        entity_type="device",
+        name="Kraken",
+    )
+
+    old_owner = Entity(
+        entity_id="person:old-owner",
+        entity_type="person",
+        name="Old Owner",
+    )
+
+    flloyd = Entity(
+        entity_id="person:flloyd",
+        entity_type="person",
+        name="Flloyd",
+    )
+
+    old_relationship = Relationship(
+        relationship_id="relationship:kraken:owner:old",
+        source_entity_id="device:kraken",
+        relationship="belongs_to",
+        target_entity_id="person:old-owner",
+        source=source,
+        learned_at="2026-09-24T10:00:00-05:00",
+    )
+
+    corrected_relationship = Relationship(
+        relationship_id="relationship:kraken:owner:flloyd",
+        source_entity_id="device:kraken",
+        relationship="belongs_to",
+        target_entity_id="person:flloyd",
+        source=source,
+        learned_at="2026-09-24T11:00:00-05:00",
+    )
+
+    manager.save_entity(kraken)
+    manager.save_entity(old_owner)
+    manager.save_entity(flloyd)
+
+    manager.save_relationship(old_relationship)
+
+    manager.supersede_relationship(
+        old_relationship.relationship_id,
+        corrected_relationship,
+    )
+
+    context = manager.get_entity_context(
+        "Who does Kraken belong to?"
+    )
+
+    assert "RELATIONSHIP: belongs_to -> Flloyd" in context
+    assert "TARGET_ENTITY_ID: person:flloyd" in context
+    assert "Old Owner" not in context
+    assert "person:old-owner" not in context
+
+    store.close()
+
+def test_get_entity_context_falls_back_to_relationship_target_id(
+    tmp_path,
+):
+    store = StructuredMemoryStore(
+        tmp_path / "structured_memory.db"
+    )
+    manager = MemoryManager(
+        vector_store=None,
+        episodic_memory=None,
+        structured_store=store,
+    )
+
+    source = MemorySource(
+        memory_type="structured",
+        source_type="user_statement",
+        authority="user",
+    )
+
+    kraken = Entity(
+        entity_id="device:kraken",
+        entity_type="device",
+        name="Kraken",
+    )
+
+    relationship = Relationship(
+        relationship_id="relationship:kraken:owner:unknown",
+        source_entity_id="device:kraken",
+        relationship="belongs_to",
+        target_entity_id="person:unknown-owner",
+        source=source,
+        learned_at="2026-09-24T11:00:00-05:00",
+    )
+
+    manager.save_entity(kraken)
+    manager.save_relationship(relationship)
+
+    context = manager.get_entity_context(
+        "Who does Kraken belong to?"
+    )
+
+    assert (
+        "RELATIONSHIP: belongs_to -> person:unknown-owner"
+        in context
+    )
+    assert "TARGET_ENTITY_ID: person:unknown-owner" in context
 
     store.close()
